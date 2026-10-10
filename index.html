@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riku Shirokuma — Game Designer</title>
+<style>
+:root{color-scheme:dark;--bg:#111212;--panel:#1a1d1b;--ink:#f3f2eb;--muted:#b1b6ae;--accent:#d1ed8b;--line:#343832;
+--systems:#8bb8ed;--liveops:#edc88b;--story:#ed8b9a;--scene:#b48bed;--personal:#8bedcf}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Arial,Helvetica,sans-serif;overflow-x:hidden}
+header{max-width:1200px;margin:auto;padding:24px 16px 0;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+header h1{font-size:clamp(28px,5vw,44px);font-weight:500;letter-spacing:-.03em;margin:0;display:flex;align-items:center;gap:14px}
+.avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;object-position:50% 30%;flex:none}
+.role{margin:0;color:var(--muted)}
+.links{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 18px;padding:0;margin:0;font-size:13px}
+a{color:var(--accent)}
+header h2{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.legend{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:0;margin:0}
+.suit-f{background:none;border:1px solid var(--suit);color:var(--suit);border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
+.suit-f span{font-size:16px}.suit-f[aria-pressed=true]{background:var(--suit);color:var(--bg)}
+.suit-f:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.table .card.dim{opacity:.22;filter:grayscale(1)}
+body.filtering .table .card:not(.dim){z-index:15;box-shadow:0 0 0 2px var(--suit),0 10px 30px #0008}
+#mode,a.pdf{background:none;border:1px solid var(--accent);color:var(--accent);padding:8px 14px;font:inherit;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block;line-height:1.5}
+#mode:focus-visible,a.pdf:focus-visible,.card:focus-visible,.close:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+.suit-systems{--suit:var(--systems)}.suit-liveops{--suit:var(--liveops)}.suit-story{--suit:var(--story)}.suit-scene{--suit:var(--scene)}
+.suit-personal{--suit:var(--personal)}
+.card{position:relative;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--suit);border-radius:14px;
+padding:12px 14px 16px;cursor:pointer;box-shadow:0 10px 30px #0008;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.corner{position:absolute;top:8px;left:8px;z-index:1;background:#111c;border:1px solid var(--suit);border-radius:8px;padding:3px 7px;
+text-align:center;line-height:1.1;color:var(--suit)}
+.corner b{display:block;font-size:11px;letter-spacing:.08em}.corner span{font-size:16px}
+.frame{position:relative;aspect-ratio:16/10;background:#242922;border-radius:8px;overflow:hidden}
+.frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 1s ease}
+.frame img.on{opacity:1}
+.tools{list-style:none;display:flex;gap:6px;padding:0;margin:0}
+.tools li{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tools svg,.plate{width:22px;height:22px}.tools svg{fill:var(--ink)}
+.plate{display:grid;place-items:center;border:1px solid var(--muted);border-radius:5px;font-size:9px;font-weight:700;color:var(--muted)}
+.tools small{font-size:8px;color:var(--muted);text-align:center;line-height:1.1;hyphens:auto;max-width:100%}
+.card h2{font-size:21px;font-weight:500;letter-spacing:-.02em;margin:2px 0 0}
+.meta{margin:0;font-size:12px;color:var(--suit)}
+.summary{margin:0;font-size:13.5px;color:var(--muted)}
+.suit-big{position:absolute;right:10px;bottom:4px;font-size:30px;color:var(--suit);opacity:.5}
+/* стол: слот сверху, веер снизу */
+.slot{display:grid;place-items:center;margin:20px auto 0;width:200px;min-height:260px;border:2px dashed var(--line);border-radius:14px;
+color:var(--muted);text-align:center;padding:12px}
+.slot .pick{font-size:22px;letter-spacing:.04em;color:var(--ink)}.slot small{display:block;font-size:12px;margin-top:6px}
+.slot.filled{border-color:transparent;padding:0;place-items:stretch}
+.card.mini{width:100%;min-height:0}.card.mini .tools,.card.mini .summary,.card.mini .suit-big{display:none}
+body.list .slot{display:none}
+body:not(.list) .table .card.played{opacity:.3}
+.table{position:relative;margin:8px 0 0;height:600px;overflow-x:clip}
+body:not(.list) .table .card{position:absolute;z-index:var(--z);transform-origin:50% 120%;transition:transform .25s,box-shadow .25s,opacity .25s}
+@media(min-width:900px){
+ body:not(.list) .table{height:470px}
+ body:not(.list) .table .card{bottom:30px;left:calc(50% - 125px + var(--o) * min(112px, (100vw - 420px) / var(--fan-steps)));width:250px;min-height:420px;
+  transform:translateY(var(--y)) rotate(var(--r))}
+ header{padding-top:16px;gap:8px}header h1{font-size:36px}.slot{width:170px;min-height:230px;margin-top:12px}.card.mini h2{font-size:17px}
+}
+@media(max-width:899.98px){
+ body:not(.list) .table{height:400px}
+ body:not(.list) .table .card{bottom:24px;left:calc(50% - 100px + var(--o) * (100vw - 216px) / var(--fan-steps));width:200px;min-height:300px;padding:10px 10px 12px;gap:6px;
+  transform:translateY(var(--y)) translateX(calc(var(--push,0) * 56px)) rotate(calc(var(--r) * 1.4))}
+ body:not(.list) .table .card:not(.lifted) :is(.summary,.tools small){display:none}
+ body:not(.list) .table .card .suit-big{display:none}
+ body:not(.list) .table .card h2{font-size:17px}
+ body:not(.list) .table .card :is(.tools svg,.plate){width:20px;height:20px}
+ body:not(.list) main.table .card.lifted{transform:translateY(-70px) scale(1.12)}
+ .slot{width:130px;min-height:170px;margin-top:10px;padding:8px}.slot .pick{font-size:17px}.card.mini h2{font-size:14px}
+ body:not(.list) .table{height:330px}
+ header{padding-top:14px;gap:6px}header h1{font-size:26px}.role{font-size:13px}.links{font-size:12px;gap:2px 14px}
+  .tools small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .suit-f{font-size:12px;padding:4px 9px}#mode,a.pdf{padding:4px 10px;font-size:12px;border-radius:999px}
+}
+body:not(.list) .table .card.lifted,body:not(.list) .table .card:focus-visible{z-index:20;opacity:1;transform:translateY(-40px) rotate(0) scale(1.06);box-shadow:0 24px 50px #000c}
+@media(hover:none){body:not(.list) .table .card{touch-action:pan-y}}
+.table.measuring .card{transition:none!important}
+@media(hover:hover){body:not(.list) .table .card:hover{z-index:20;opacity:1;transform:translateY(-40px) rotate(0) scale(1.06);box-shadow:0 24px 50px #000c}}
+/* списком */
+body.list .table{height:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:20px;padding:0 16px 40px}
+/* раскрытый кейс */
+dialog.case{width:min(760px,calc(100vw - 24px));max-height:calc(100dvh - 24px);background:var(--panel);color:var(--ink);
+border:1px solid var(--line);border-top:5px solid var(--suit);border-radius:14px;padding:22px clamp(16px,4vw,36px) 30px}
+dialog::backdrop{background:#000b}
+dialog h2{font-size:clamp(26px,5vw,38px);font-weight:500;margin:4px 0 14px}
+dialog img{width:100%;max-height:360px;object-fit:contain;background:#242922;border-radius:8px;display:block}
+.credit{font-size:10px;color:var(--muted);margin:6px 0 14px}
+.eyebrow{color:var(--suit);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin:0}
+dialog dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0 0 10px}
+dialog dt{color:var(--accent);font-size:11px;text-transform:uppercase;letter-spacing:.12em;padding-top:2px}dialog dd{margin:0}
+dialog .shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:10px 0}
+dialog .shots figure{margin:0}dialog .shots img{width:100%;height:auto;border-radius:8px;display:block}
+dialog .shots figcaption{font-size:11px;opacity:.6;margin-top:4px}
+dialog h3{color:var(--accent);font-size:13px;text-transform:uppercase;letter-spacing:.12em;margin:22px 0 6px}
+dialog p,dialog li{color:var(--muted);overflow-wrap:anywhere}dialog ul{padding-left:20px;margin:0}dialog li+li{margin-top:6px}
+dialog ul.tools{padding:0;margin:10px 0}dialog .tools li+li{margin-top:0}dialog .tools small{white-space:normal;overflow:visible}
+.close{position:sticky;top:0;float:right;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:50%;
+width:40px;height:40px;font-size:22px;cursor:pointer}
+.about{max-width:760px;margin:40px auto 0;padding:32px 16px 48px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:24px}
+.about h2{font-size:28px;font-weight:500;margin:4px 0}.about p{color:var(--muted)}.about .about-role{color:var(--ink)}
+.about .eyebrow{color:var(--accent)}.portrait{width:160px;height:160px;object-fit:cover;border-radius:50%}
+.portrait-print{display:none}
+.about-list{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:4px 18px;font-size:14px}
+/* PDF: профиль, о себе и все кейсы по очереди, без стола */
+@media print{
+ @page{margin:10mm}
+ :root{color-scheme:light;--bg:#fff;--panel:#fff;--ink:#111;--muted:#333;--accent:#3a5a0a;--line:#ccc}
+ body>header,.slot,.table,.close{display:none!important}
+ .about{margin-top:12px;break-after:page;flex-wrap:nowrap;align-items:flex-start}
+ .portrait-site{display:none}.portrait-print{display:block;width:30mm;height:40mm;object-fit:cover;border-radius:0;flex:none}
+ dialog.case{display:grid;grid-template-columns:42% minmax(0,1fr);column-gap:18px;position:static;width:auto;max-height:none;border:0;border-top:5px solid var(--suit);border-radius:0;padding:12px 0;margin:0;break-before:page;break-inside:avoid;font-size:11px;line-height:1.4}
+ dialog.case>form{display:none}dialog.case>*{grid-column:2;min-width:0}dialog.case>.eyebrow,dialog.case>h2{grid-column:1/-1}
+ dialog.case>img{grid-column:1;grid-row:3/5;max-height:180px;background:none}dialog.case>.credit{grid-column:1;grid-row:5;font-size:10px;margin:4px 0}
+ dialog.case>.shots{grid-column:1;grid-row:3/7;grid-template-columns:1fr;align-content:start;gap:8px;margin:0}dialog.case:has(>img)>.shots{grid-row:6/11}
+ dialog .shots img{max-height:150px;object-fit:contain;background:none}dialog .shots figcaption{font-size:10px}
+ dialog h2{font-size:26px;margin:4px 0 12px}dialog h3{font-size:11px;margin:10px 0 4px}dialog p{margin:0 0 8px}dialog li+li{margin-top:4px}
+ dialog dl{gap:3px 10px}dialog dt{font-size:10px}dialog ul.tools{margin:6px 0}dialog .tools small{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body style="--fan-steps:8">
+<header>
+  <h1><img class="avatar" src="media/profile/avatar-site.jpg" alt="Photo of Riku Shirokuma" width="56" height="56">Riku Shirokuma</h1><p class="role">Game Designer · Technical Designer · Tokyo, Japan</p><ul class="links"><li><a href="https://www.linkedin.com/in/riku-shirokuma-204280117">LinkedIn ↗</a></li><li><a href="https://www.mobygames.com/game/249085/pokemon-legends-z-a/credits/switch/">Pokémon Legends Z-A credits ↗</a></li><li><a href="https://dyschroniaca.com/en/staffcast/staff.html">DYSCHRONIA staff ↗</a></li><li><a href="#about">About ↓</a></li></ul>
+  <h2>Selected work</h2>
+  <ul class="legend" aria-label="Highlight by discipline"><li><button type="button" class="suit-f suit-systems" data-suit="systems" aria-pressed="false"><span>♠</span> Systems</button></li><li><button type="button" class="suit-f suit-liveops" data-suit="liveops" aria-pressed="false"><span>♦</span> Live-ops</button></li><li><button type="button" class="suit-f suit-story" data-suit="story" aria-pressed="false"><span>♥</span> Story</button></li><li><button type="button" class="suit-f suit-scene" data-suit="scene" aria-pressed="false"><span>♣</span> Scene & design</button></li><li><button type="button" class="suit-f suit-personal" data-suit="personal" aria-pressed="false"><span>✦</span> Personal lab</button></li><li><button id="mode" type="button" aria-pressed="false">List view</button></li><li><a class="pdf" href="portfolio.pdf" download>Download PDF ↓</a></li></ul>
+</header>
+<section id="slot" class="slot" aria-live="polite"><p><span class="pick">Pick a card</span><small>Tap a card to lift it, tap again to play it</small></p></section>
+<main id="work" class="table">
+    <article class="card suit-liveops" style="--o:-4.0;--r:-16.0deg;--y:48px;--z:0" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-puzzle-panic" data-open="d-puzzle-panic">
+      <div class="corner" aria-label="Role: Lead Game Planner; discipline: Live-ops"><b>LEAD</b><span>♦</span></div>
+      <div class="frame"><img src="media/puzzle-panic-01.jpg" alt="Puzzle Panic official iPhone store screenshot 01" loading="lazy" class=on><img src="media/puzzle-panic-02.jpg" alt="Puzzle Panic official iPhone store screenshot 02" loading="lazy"></div>
+      <ul class="tools"><li aria-label="HTML5"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 0h21l-1.91 21.563L11.977 24l-8.564-2.438L1.5 0zm7.031 9.75l-.232-2.718 10.059.003.23-2.622L5.412 4.41l.698 8.01h9.126l-.326 3.426-2.91.804-2.955-.81-.188-2.11H6.248l.33 4.171L12 19.351l5.379-1.443.744-8.157H8.531z"/></svg><small>HTML5</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li><li aria-label="Claude Code"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg><small>Claude Code</small></li><li class="more" aria-label="2 more: Codex, Gemini"><span class="plate">+2</span><small>more</small></li></ul>
+      <h2>Puzzle Panic</h2>
+      <p class="meta">Lead Game Planner · Feb 2025 – Present</p>
+      <p class="summary">Lead Planner on a live-ops mobile match-3: episodes, timed events, new obstacles, competitor research and playable HTML5 event prototypes.</p>
+      <span class="suit-big" aria-hidden="true">♦</span>
+    </article>
+    <article class="card suit-story" style="--o:-3.0;--r:-12.0deg;--y:27px;--z:1" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-pokemon-legends-z-a" data-open="d-pokemon-legends-z-a">
+      <div class="corner" aria-label="Role: Planner (Story Team); discipline: Story"><b>STORY</b><span>♥</span></div>
+      <div class="frame"><img src="media/pokemon-01.jpg" alt="Pokémon LEGENDS Z-A promotional screenshot P02_02" loading="lazy" class=on><img src="media/pokemon-02.jpg" alt="Pokémon LEGENDS Z-A promotional screenshot P02_04" loading="lazy"><img src="media/pokemon-03.jpg" alt="Pokémon LEGENDS Z-A gameplay: open-world battle HUD with move commands" loading="lazy"></div>
+      <ul class="tools"><li aria-label="Proprietary tools"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>Proprietary tools</small></li><li aria-label="Nintendo Switch / Switch 2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.176 24h3.674c3.376 0 6.15-2.774 6.15-6.15V6.15C24 2.775 21.226 0 17.85 0H14.1c-.074 0-.15.074-.15.15v23.7c-.001.076.075.15.226.15zm4.574-13.199c1.351 0 2.399 1.125 2.399 2.398 0 1.352-1.125 2.4-2.399 2.4-1.35 0-2.4-1.049-2.4-2.4-.075-1.349 1.05-2.398 2.4-2.398zM11.4 0H6.15C2.775 0 0 2.775 0 6.15v11.7C0 21.226 2.775 24 6.15 24h5.25c.074 0 .15-.074.15-.149V.15c.001-.076-.075-.15-.15-.15zM9.676 22.051H6.15c-2.326 0-4.201-1.875-4.201-4.201V6.15c0-2.326 1.875-4.201 4.201-4.201H9.6l.076 20.102zM3.75 7.199c0 1.275.975 2.25 2.25 2.25s2.25-.975 2.25-2.25c0-1.273-.975-2.25-2.25-2.25s-2.25.977-2.25 2.25z"/></svg><small>Nintendo Switch / Switch 2</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul>
+      <h2>Pokémon LEGENDS Z-A</h2>
+      <p class="meta">Planner (Story Team) · 2023-10 — 2024-12</p>
+      <p class="summary">Planner on the Story Team: cameras and cutscenes for every side quest and 15–20% of the main story.</p>
+      <span class="suit-big" aria-hidden="true">♥</span>
+    </article>
+    <article class="card suit-scene" style="--o:-2.0;--r:-8.0deg;--y:12px;--z:2" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-dyschronia" data-open="d-dyschronia">
+      <div class="corner" aria-label="Role: Game Designer; discipline: Scene &amp; design"><b>GD</b><span>♣</span></div>
+      <div class="frame"><img src="media/dyschronia-01.jpg" alt="DYSCHRONIA: Chronos Alternate Memory Dive gameplay screenshot" loading="lazy" class=on><img src="media/dyschronia-02.jpg" alt="DYSCHRONIA: Chronos Alternate puzzle gameplay screenshot" loading="lazy"></div>
+      <ul class="tools"><li aria-label="In-house script engine"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>In-house script engine</small></li><li aria-label="Google Sheets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.318 12.545H7.91v-1.909h3.41v1.91zM14.728 0v6h6l-6-6zm1.363 10.636h-3.41v1.91h3.41v-1.91zm0 3.273h-3.41v1.91h3.41v-1.91zM20.727 6.5v15.864c0 .904-.732 1.636-1.636 1.636H4.909a1.636 1.636 0 0 1-1.636-1.636V1.636C3.273.732 4.005 0 4.909 0h9.318v6.5h6.5zm-3.273 2.773H6.545v7.909h10.91v-7.91zm-6.136 4.636H7.91v1.91h3.41v-1.91z"/></svg><small>Google Sheets</small></li><li aria-label="Confluence"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.87 18.257c-.248.382-.53.875-.763 1.245a.764.764 0 0 0 .255 1.04l4.965 3.054a.764.764 0 0 0 1.058-.26c.199-.332.454-.763.733-1.221 1.967-3.247 3.945-2.853 7.508-1.146l4.957 2.337a.764.764 0 0 0 1.028-.382l2.364-5.346a.764.764 0 0 0-.382-1 599.851 599.851 0 0 1-4.965-2.361C10.911 10.97 5.224 11.185.87 18.257zM23.131 5.743c.249-.405.531-.875.764-1.25a.764.764 0 0 0-.256-1.034L18.675.404a.764.764 0 0 0-1.058.26c-.195.335-.451.763-.734 1.225-1.966 3.246-3.945 2.85-7.508 1.146L4.437.694a.764.764 0 0 0-1.027.382L1.046 6.422a.764.764 0 0 0 .382 1c1.039.49 3.105 1.467 4.965 2.361 6.698 3.246 12.392 3.029 16.738-4.04z"/></svg><small>Confluence</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul>
+      <h2>DYSCHRONIA: Chronos Alternate</h2>
+      <p class="meta">Game Designer · 2022-04 — 2023-03</p>
+      <p class="summary">VR story scenes in Unity for a Meta Quest 2 adventure: 3D cutscenes, props, NPC interactions, stealth and puzzle balance.</p>
+      <span class="suit-big" aria-hidden="true">♣</span>
+    </article>
+    <article class="card suit-systems" style="--o:-1.0;--r:-4.0deg;--y:3px;--z:3" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-shadowverse-champions-battle" data-open="d-shadowverse-champions-battle">
+      <div class="corner" aria-label="Role: System Planner; discipline: Systems"><b>SYS</b><span>♠</span></div>
+      <div class="frame"><img src="media/shadowverse-01.jpg" alt="Shadowverse: Champion&#x27;s Battle gameplay: school club scene in the classroom" loading="lazy" class=on><img src="media/shadowverse-02.jpg" alt="Shadowverse: Champion&#x27;s Battle story mode dialogue" loading="lazy"></div>
+      <ul class="tools"><li aria-label="Lua"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.38 10.377l-.272-.037c-.048.344-.082.695-.101 1.041l.275.016c.018-.34.051-.682.098-1.02zM4.136 3.289l-.184-.205c-.258.232-.509.48-.746.734l.202.188c.231-.248.476-.49.728-.717zM5.769 2.059l-.146-.235c-.296.186-.586.385-.863.594l.166.219c.27-.203.554-.399.843-.578zM1.824 18.369c.185.297.384.586.593.863l.22-.164c-.205-.271-.399-.555-.58-.844l-.233.145zM1.127 16.402l-.255.104c.129.318.274.635.431.943l.005.01.245-.125-.005-.01c-.153-.301-.295-.611-.421-.922zM.298 9.309l.269.063c.076-.332.168-.664.272-.986l-.261-.087c-.108.332-.202.672-.28 1.01zM.274 12.42l-.275.01c.012.348.04.699.083 1.043l.273-.033c-.042-.336-.069-.68-.081-1.02zM.256 14.506c.073.34.162.682.264 1.014l.263-.08c-.1-.326-.187-.658-.258-.99l-.269.056zM11.573.275L11.563 0c-.348.012-.699.039-1.044.082l.034.273c.338-.041.68-.068 1.02-.08zM23.221 8.566c.1.326.186.66.256.992l.27-.059c-.072-.34-.16-.682-.262-1.014l-.264.081zM17.621 1.389c-.309-.164-.627-.314-.947-.449l-.107.252c.314.133.625.281.926.439l.128-.242zM15.693.572c-.332-.105-.67-.199-1.01-.277l-.063.268c.332.076.664.168.988.273l.085-.264zM6.674 1.545c.298-.15.606-.291.916-.418L7.486.873c-.317.127-.632.272-.937.428l-.015.008.125.244.015-.008zM23.727 11.588l.275-.01a11.797 11.797 0 0 0-.082-1.045l-.273.033c.041.338.068.682.08 1.022zM13.654.105c-.346-.047-.696-.08-1.043-.098l-.014.273c.339.018.683.051 1.019.098l.038-.273zM9.544.527l-.058-.27c-.34.072-.681.16-1.014.264l.081.262c.325-.099.659-.185.991-.256zM1.921 5.469l.231.15c.185-.285.384-.566.592-.834l-.217-.17c-.213.276-.417.563-.606.854zM.943 7.318l.253.107c.132-.313.28-.625.439-.924l-.243-.128c-.163.307-.314.625-.449.945zM18.223 21.943l.145.234c.295-.186.586-.385.863-.594l-.164-.219c-.272.204-.557.4-.844.579zM21.248 19.219l.217.17c.215-.273.418-.561.607-.854l-.23-.148c-.186.285-.385.564-.594.832zM19.855 20.715l.184.203c.258-.23.51-.479.746-.732l-.201-.188c-.23.248-.477.488-.729.717zM22.359 17.504l.244.129c.162-.307.314-.625.449-.945l-.254-.107a11.27 11.27 0 0 1-.439.923zM23.617 13.629l.273.039c.049-.346.082-.695.102-1.043l-.275-.014c-.018.338-.051.682-.1 1.018zM23.156 15.621l.264.086c.107-.332.201-.67.279-1.01l-.268-.063c-.077.333-.169.665-.275.987zM22.453 6.672c.154.303.297.617.424.932l.256-.104c-.131-.322-.277-.643-.436-.953l-.244.125zM8.296 23.418c.331.107.67.201 1.009.279l.062-.268c-.331-.076-.663-.168-.986-.273l-.085.262zM10.335 23.889c.345.049.696.082 1.043.102l.014-.275c-.339-.018-.682-.051-1.019-.098l-.038.271zM17.326 22.449c-.303.154-.613.297-.926.424l.104.256c.318-.131.639-.275.947-.434l.004-.002-.123-.246-.006.002zM4.613 21.467c.274.213.562.418.854.605l.149-.23c-.285-.184-.565-.385-.833-.592l-.17.217zM12.417 23.725l.009.275c.348-.014.699-.041 1.045-.084l-.035-.271c-.336.041-.68.068-1.019.08zM6.37 22.604c.307.162.625.314.946.449l.107-.254c-.313-.133-.624-.279-.924-.439l-.129.244zM3.083 20.041c.233.258.48.51.734.746l.188-.201c-.249-.23-.49-.477-.717-.729l-.205.184zM14.445 23.475l.059.27c.34-.074.68-.162 1.014-.266l-.082-.262c-.325.099-.659.185-.991.258zM21.18.129A2.689 2.689 0 1 0 21.18 5.507 2.689 2.689 0 1 0 21.18.129zM15.324 15.447c0 .471.314.66.852.66.67 0 1.297-.396 1.297-1.016v-.645c-.23.107-.379.141-1.107.24-.735.109-1.042.306-1.042.761zM12 2.818c-5.07 0-9.18 4.109-9.18 9.18 0 5.068 4.11 9.18 9.18 9.18 5.07 0 9.18-4.111 9.18-9.18 0-5.07-4.11-9.18-9.18-9.18zm-2.487 13.77H5.771v-6.023h.769v5.346h2.974v.677zm4.13 0h-.619v-.67c-.405.57-.811.793-1.446.793-.843 0-1.38-.463-1.38-1.182v-3.271h.686v3c0 .52.347.85.893.85.719 0 1.181-.578 1.181-1.461v-2.389h.686v4.33zm-.53-8.393c0-1.484 1.205-2.689 2.689-2.689s2.688 1.205 2.688 2.689-1.203 2.688-2.688 2.688-2.689-1.203-2.689-2.688zm5.567 7.856v.52c-.223.059-.33.074-.471.074-.34 0-.637-.238-.711-.57-.381.406-.918.637-1.471.637-.877 0-1.422-.463-1.422-1.248 0-.527.256-.916.76-1.123.266-.107.414-.141 1.389-.264.545-.066.719-.191.719-.48v-.182c0-.412-.348-.645-.967-.645-.645 0-.957.24-1.016.77h-.693c.041-1 .686-1.404 1.734-1.404 1.066 0 1.627.412 1.627 1.182v2.412c0 .215.133.338.373.338.041-.002.074-.002.149-.017z"/></svg><small>Lua</small></li><li aria-label="Confluence"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.87 18.257c-.248.382-.53.875-.763 1.245a.764.764 0 0 0 .255 1.04l4.965 3.054a.764.764 0 0 0 1.058-.26c.199-.332.454-.763.733-1.221 1.967-3.247 3.945-2.853 7.508-1.146l4.957 2.337a.764.764 0 0 0 1.028-.382l2.364-5.346a.764.764 0 0 0-.382-1 599.851 599.851 0 0 1-4.965-2.361C10.911 10.97 5.224 11.185.87 18.257zM23.131 5.743c.249-.405.531-.875.764-1.25a.764.764 0 0 0-.256-1.034L18.675.404a.764.764 0 0 0-1.058.26c-.195.335-.451.763-.734 1.225-1.966 3.246-3.945 2.85-7.508 1.146L4.437.694a.764.764 0 0 0-1.027.382L1.046 6.422a.764.764 0 0 0 .382 1c1.039.49 3.105 1.467 4.965 2.361 6.698 3.246 12.392 3.029 16.738-4.04z"/></svg><small>Confluence</small></li><li aria-label="Nintendo Dev Interface"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>Nintendo Dev Interface</small></li><li aria-label="Visual Studio Code"><span class="plate" aria-hidden="true">VI</span><small>Visual Studio Code</small></li><li aria-label="SourceForge"><span class="plate" aria-hidden="true">SO</span><small>SourceForge</small></li><li class="more" aria-label="3 more: Excel, Word, PowerPoint"><span class="plate">+3</span><small>more</small></li></ul>
+      <h2>Shadowverse: Champion&#x27;s Battle</h2>
+      <p class="meta">System Planner · 2020-01 — 2020-05</p>
+      <p class="summary">Designed and implemented every main and side quest: unlock conditions, NPC spawning, day/night branching and rewards.</p>
+      <span class="suit-big" aria-hidden="true">♠</span>
+    </article>
+    <article class="card suit-scene" style="--o:0.0;--r:0.0deg;--y:0px;--z:4" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-bustafellows" data-open="d-bustafellows">
+      <div class="corner" aria-label="Role: Game Planner / Scene Direction; discipline: Scene &amp; design"><b>SCENE</b><span>♣</span></div>
+      <div class="frame"><img src="media/bustafellows-01.jpg" alt="BUSTAFELLOWS gameplay: dialogue scene with name plate and text window" loading="lazy" class=on><img src="media/bustafellows-02.jpg" alt="BUSTAFELLOWS gameplay: in-game video call interface" loading="lazy"></div>
+      <ul class="tools"><li aria-label="In-house script language"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>In-house script language</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul>
+      <h2>BUSTAFELLOWS</h2>
+      <p class="meta">Game Planner / Scene Direction · 2019-01 — 2019-02</p>
+      <p class="summary">Scene direction for the iOS and Android version of BUSTAFELLOWS: ADV cutscenes and mystery-solving scenes.</p>
+      <span class="suit-big" aria-hidden="true">♣</span>
+    </article>
+    <article class="card suit-liveops" style="--o:1.0;--r:4.0deg;--y:3px;--z:5" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-yuyuyui" data-open="d-yuyuyui">
+      <div class="corner" aria-label="Role: Game Planner / Script Planner; discipline: Live-ops"><b>SCRIPT</b><span>♦</span></div>
+      <div class="frame"><img src="media/yuyuyui-01.jpg" alt="Yuki Yuna is a Hero: Hanayui no Kirameki official game screen" loading="lazy" class=on><img src="media/yuyuyui-02.jpg" alt="Yuki Yuna is a Hero: Hanayui no Kirameki official event screen" loading="lazy"></div>
+      <ul class="tools"><li aria-label="In-house script language"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>In-house script language</small></li><li aria-label="Google Sheets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.318 12.545H7.91v-1.909h3.41v1.91zM14.728 0v6h6l-6-6zm1.363 10.636h-3.41v1.91h3.41v-1.91zm0 3.273h-3.41v1.91h3.41v-1.91zM20.727 6.5v15.864c0 .904-.732 1.636-1.636 1.636H4.909a1.636 1.636 0 0 1-1.636-1.636V1.636C3.273.732 4.005 0 4.909 0h9.318v6.5h6.5zm-3.273 2.773H6.545v7.909h10.91v-7.91zm-6.136 4.636H7.91v1.91h3.41v-1.91z"/></svg><small>Google Sheets</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul>
+      <h2>Yuki Yuna is a Hero: Hanayui no Kirameki</h2>
+      <p class="meta">Game Planner / Script Planner · 2019 — 2023</p>
+      <p class="summary">ADV cutscenes and event direction schedules across three live-ops stints on a mobile title, up to its end of service.</p>
+      <span class="suit-big" aria-hidden="true">♦</span>
+    </article>
+    <article class="card suit-story" style="--o:2.0;--r:8.0deg;--y:12px;--z:6" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-shinen-resist" data-open="d-shinen-resist">
+      <div class="corner" aria-label="Role: Script Lead; discipline: Story"><b>LEAD</b><span>♥</span></div>
+      <div class="frame"><img src="media/shinen-resist-01.jpg" alt="Shinen Resist official ADV story scene screenshot" loading="lazy" class=on><img src="media/shinen-resist-02.jpg" alt="Shinen Resist official ADV dialogue screenshot" loading="lazy"></div>
+      <ul class="tools"><li aria-label="In-house script language"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>In-house script language</small></li><li aria-label="SharePoint"><span class="plate" aria-hidden="true">SH</span><small>SharePoint</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul>
+      <h2>Shinen Resist</h2>
+      <p class="meta">Script Lead · 2017-12 — 2019-01</p>
+      <p class="summary">Scene direction and script lead on a mobile RPG: led four scripters and planned new script engine features.</p>
+      <span class="suit-big" aria-hidden="true">♥</span>
+    </article>
+    <article class="card suit-systems" style="--o:3.0;--r:12.0deg;--y:27px;--z:7" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-shacho-battle" data-open="d-shacho-battle">
+      <div class="corner" aria-label="Role: Game Planner; discipline: Systems"><b>PLAN</b><span>♠</span></div>
+      <div class="frame"><img src="media/shacho-battle-01.jpg" alt="Shacho, Battle no Jikan desu! Steam version gameplay: grid battle at Inferno Mountain" loading="lazy" class=on><img src="media/shacho-battle-02.jpg" alt="Shacho, Battle no Jikan desu! Steam version gameplay: grid battle at Blade Wastelands" loading="lazy"></div>
+      <ul class="tools"><li aria-label="Google Sheets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.318 12.545H7.91v-1.909h3.41v1.91zM14.728 0v6h6l-6-6zm1.363 10.636h-3.41v1.91h3.41v-1.91zm0 3.273h-3.41v1.91h3.41v-1.91zM20.727 6.5v15.864c0 .904-.732 1.636-1.636 1.636H4.909a1.636 1.636 0 0 1-1.636-1.636V1.636C3.273.732 4.005 0 4.909 0h9.318v6.5h6.5zm-3.273 2.773H6.545v7.909h10.91v-7.91zm-6.136 4.636H7.91v1.91h3.41v-1.91z"/></svg><small>Google Sheets</small></li><li aria-label="Confluence"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.87 18.257c-.248.382-.53.875-.763 1.245a.764.764 0 0 0 .255 1.04l4.965 3.054a.764.764 0 0 0 1.058-.26c.199-.332.454-.763.733-1.221 1.967-3.247 3.945-2.853 7.508-1.146l4.957 2.337a.764.764 0 0 0 1.028-.382l2.364-5.346a.764.764 0 0 0-.382-1 599.851 599.851 0 0 1-4.965-2.361C10.911 10.97 5.224 11.185.87 18.257zM23.131 5.743c.249-.405.531-.875.764-1.25a.764.764 0 0 0-.256-1.034L18.675.404a.764.764 0 0 0-1.058.26c-.195.335-.451.763-.734 1.225-1.966 3.246-3.945 2.85-7.508 1.146L4.437.694a.764.764 0 0 0-1.027.382L1.046 6.422a.764.764 0 0 0 .382 1c1.039.49 3.105 1.467 4.965 2.361 6.698 3.246 12.392 3.029 16.738-4.04z"/></svg><small>Confluence</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul>
+      <h2>Shacho, Battle no Jikan desu!</h2>
+      <p class="meta">Game Planner · 2017-04 — 2017-12, 2019</p>
+      <p class="summary">Feature specs, master data, stage themes and balance of features, characters, skills and equipment for a mobile RPG.</p>
+      <span class="suit-big" aria-hidden="true">♠</span>
+    </article>
+    <article class="card suit-personal" style="--o:4.0;--r:16.0deg;--y:48px;--z:8" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-personal-lab" data-open="d-personal-lab">
+      <div class="corner" aria-label="Personal lab"><b>LAB</b><span>✦</span></div>
+      <div class="frame"><img src="media/concept/coven-workshop-v1.jpg" alt="Concept art of a magical workshop" loading="lazy" class=on><img src="media/concept/table-horror-night-v1.jpg" alt="Concept art of a nighttime horror scene around a D&amp;D gaming table" loading="lazy"></div>
+      <ul class="tools"><li aria-label="Godot"><span class="plate" aria-hidden="true">GO</span><small>Godot</small></li><li aria-label="Unity"><span class="plate" aria-hidden="true">UN</span><small>Unity</small></li><li aria-label="Ollama"><span class="plate" aria-hidden="true">OL</span><small>Ollama</small></li><li aria-label="Claude Code"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg><small>Claude Code</small></li></ul>
+      <h2>Personal lab</h2>
+      <p class="meta">Personal exploration</p>
+      <p class="summary">A place to learn by experimenting with concept art, AI-assisted game prototypes, local models and multi-agent orchestration.</p>
+      <span class="suit-big" aria-hidden="true">✦</span>
+    </article>
+</main>
+<footer><section id="about" class="about" aria-labelledby="about-title"><img class="portrait portrait-site" src="media/profile/avatar-site.jpg" alt="Riku Shirokuma" width="160" height="160"><img class="portrait-print" src="media/profile/avatar-print.jpg" alt="Riku Shirokuma" width="450" height="600"><div><p class="eyebrow">About</p><h2 id="about-title">Riku Shirokuma</h2><p class="about-role">Game Designer · Technical Designer · Tokyo, Japan</p><p>Game designer with 9 years across console, mobile and VR, credited on Pokémon Legends Z-A and DYSCHRONIA: Chronos Alternate. Now Lead Game Planner on Puzzle Panic at Limit Break: new mechanics, events and HTML5 prototypes pitched to leadership.</p><p>I build what I design: quests, scenes and production tools in Unity, Lua and in-house scripting.</p><ul class="about-list"><li>Russian — native</li><li>Japanese — business</li><li>English — business</li></ul><ul class="about-list"><li><a href="https://www.linkedin.com/in/riku-shirokuma-204280117">LinkedIn ↗</a></li><li><a href="https://www.mobygames.com/game/249085/pokemon-legends-z-a/credits/switch/">Pokémon Legends Z-A credits ↗</a></li><li><a href="https://dyschroniaca.com/en/staffcast/staff.html">DYSCHRONIA staff ↗</a></li></ul></div></section></footer>
+
+    <dialog id="d-puzzle-panic" class="case suit-liveops" aria-labelledby="t-puzzle-panic">
+      <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+      <p class="eyebrow">♦ Live-ops</p>
+      <h2 id="t-puzzle-panic">Puzzle Panic</h2>
+      <img src="media/puzzle-panic.gif" alt="Puzzle Panic official gameplay animated preview" loading="lazy">
+      <p class="credit">© 2026 Limit Break Inc.</p>
+      <div class="shots"><figure><img src="media/puzzle-panic-01.jpg" alt="Puzzle Panic official iPhone store screenshot 01" loading="lazy"><figcaption>© 2026 Limit Break Inc.</figcaption></figure><figure><img src="media/puzzle-panic-02.jpg" alt="Puzzle Panic official iPhone store screenshot 02" loading="lazy"><figcaption>© 2026 Limit Break Inc.</figcaption></figure></div>
+      <dl>
+        <dt>Role</dt><dd>Lead Game Planner</dd>
+        <dt>Team</dt><dd>Approximately 70 people</dd>
+        <dt>Period</dt><dd>Feb 2025 – Present</dd>
+        <dt>Engine</dt><dd>Unity; HTML5 for prototypes; Google Spreadsheets</dd>
+      </dl>
+      <section aria-label="Tools"><ul class="tools"><li aria-label="HTML5"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 0h21l-1.91 21.563L11.977 24l-8.564-2.438L1.5 0zm7.031 9.75l-.232-2.718 10.059.003.23-2.622L5.412 4.41l.698 8.01h9.126l-.326 3.426-2.91.804-2.955-.81-.188-2.11H6.248l.33 4.171L12 19.351l5.379-1.443.744-8.157H8.531z"/></svg><small>HTML5</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li><li aria-label="Claude Code"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg><small>Claude Code</small></li><li class="more" aria-label="2 more: Codex, Gemini"><span class="plate">+2</span><small>more</small></li></ul></section>
+      <h3>Challenge</h3><p>A live-ops match-3 shipping episodes and time-limited events on a rolling schedule, with about 70 people on the project. Every new mechanic needed its own specification, a working prototype and a presentation to management, and then had to be integrated into the Unity build without disturbing the existing puzzle balance.</p>
+      <h3>What I did</h3><ul><li>Wrote GDDs for episodes and time-limited events, including the new mechanics behind them.</li><li>Designed new puzzles and obstacles and rebalanced the existing puzzle set.</li><li>Analysed competing titles and researched which mechanics actually work.</li><li>Prototyped events in HTML5 and presented them to management.</li><li>Integrated assets, built scenes, implemented animation, verified triggers, debugged and automated routine work in Unity.</li><li>Coordinated the UI team and supported the producer in working with the UA and sales art teams.</li><li>Interpreted all meetings in Japanese, English and Russian, translated texts EN↔JP and handled Russian localization.</li></ul>
+      <h3>Result</h3><p>Every event reached management as a playable HTML5 prototype rather than a document. The project has been in live operation since February 2025; the Android version is built but not yet released.</p>
+    </dialog>
+    <dialog id="d-pokemon-legends-z-a" class="case suit-story" aria-labelledby="t-pokemon-legends-z-a">
+      <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+      <p class="eyebrow">♥ Story</p>
+      <h2 id="t-pokemon-legends-z-a">Pokémon LEGENDS Z-A</h2>
+      <img src="media/pokemon.gif" alt="Pokémon LEGENDS Z-A gameplay: Tepig battles Bunnelby in Lumiose City, Ember hits" loading="lazy">
+      <p class="credit">©2025 Pokémon. © 1995-2025 Nintendo / Creatures Inc. / GAME FREAK inc.</p>
+      <div class="shots"><figure><img src="media/pokemon-01.jpg" alt="Pokémon LEGENDS Z-A promotional screenshot P02_02" loading="lazy"><figcaption>©2025 Pokémon. © 1995-2025 Nintendo / Creatures Inc. / GAME FREAK inc.</figcaption></figure><figure><img src="media/pokemon-02.jpg" alt="Pokémon LEGENDS Z-A promotional screenshot P02_04" loading="lazy"><figcaption>©2025 Pokémon. © 1995-2025 Nintendo / Creatures Inc. / GAME FREAK inc.</figcaption></figure><figure><img src="media/pokemon-03.jpg" alt="Pokémon LEGENDS Z-A gameplay: open-world battle HUD with move commands" loading="lazy"><figcaption>©2025 Pokémon. © 1995-2025 Nintendo / Creatures Inc. / GAME FREAK inc.</figcaption></figure></div>
+      <dl>
+        <dt>Role</dt><dd>Planner (Story Team)</dd>
+        <dt>Team</dt><dd>Story Team: 10 people; 925 people in the credits</dd>
+        <dt>Period</dt><dd>2023-10 — 2024-12</dd>
+        <dt>Engine</dt><dd>Internal 3D engine; Nintendo Switch / Switch 2 SDK</dd>
+      </dl>
+      <section aria-label="Tools"><ul class="tools"><li aria-label="Proprietary tools"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>Proprietary tools</small></li><li aria-label="Nintendo Switch / Switch 2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.176 24h3.674c3.376 0 6.15-2.774 6.15-6.15V6.15C24 2.775 21.226 0 17.85 0H14.1c-.074 0-.15.074-.15.15v23.7c-.001.076.075.15.226.15zm4.574-13.199c1.351 0 2.399 1.125 2.399 2.398 0 1.352-1.125 2.4-2.399 2.4-1.35 0-2.4-1.049-2.4-2.4-.075-1.349 1.05-2.398 2.4-2.398zM11.4 0H6.15C2.775 0 0 2.775 0 6.15v11.7C0 21.226 2.775 24 6.15 24h5.25c.074 0 .15-.074.15-.149V.15c.001-.076-.075-.15-.15-.15zM9.676 22.051H6.15c-2.326 0-4.201-1.875-4.201-4.201V6.15c0-2.326 1.875-4.201 4.201-4.201H9.6l.076 20.102zM3.75 7.199c0 1.275.975 2.25 2.25 2.25s2.25-.975 2.25-2.25c0-1.273-.975-2.25-2.25-2.25s-2.25.977-2.25 2.25z"/></svg><small>Nintendo Switch / Switch 2</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul></section>
+      <h3>Challenge</h3><p>A large RPG production with more than 30 people on the project and a ten-person Story Team inside the Planning Section. Every side quest needed its own cameras and staging while staying consistent with the direction set for the rest of the game.</p>
+      <h3>What I did</h3><ul><li>Created cameras and cutscenes for every side quest in the game.</li><li>Created cameras and cutscenes for 15–20% of the main story.</li><li>Took part in creating side quests from the initial idea through to implementation.</li><li>Designed the placement of NPCs and Pokémon in the game world.</li><li>Worked through implementation and testing with proprietary tools on Nintendo Switch and Switch 2 hardware.</li></ul>
+      <h3>Result</h3><p>Credited by name in the Story Team of the Planning Section; the end credits list 925 people.</p>
+    </dialog>
+    <dialog id="d-dyschronia" class="case suit-scene" aria-labelledby="t-dyschronia">
+      <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+      <p class="eyebrow">♣ Scene & design</p>
+      <h2 id="t-dyschronia">DYSCHRONIA: Chronos Alternate</h2>
+      <img src="media/dyschronia.gif" alt="DYSCHRONIA: Chronos Alternate official launch trailer animation" loading="lazy">
+      <p class="credit">©Project DYSCHRONIA. Trailer: PlayStation / MyDearest.</p>
+      <div class="shots"><figure><img src="media/dyschronia-01.jpg" alt="DYSCHRONIA: Chronos Alternate Memory Dive gameplay screenshot" loading="lazy"><figcaption>©Project DYSCHRONIA.</figcaption></figure><figure><img src="media/dyschronia-02.jpg" alt="DYSCHRONIA: Chronos Alternate puzzle gameplay screenshot" loading="lazy"><figcaption>©Project DYSCHRONIA.</figcaption></figure></div>
+      <dl>
+        <dt>Role</dt><dd>Game Designer</dd>
+        <dt>Team</dt><dd>Development team: approximately 26 people</dd>
+        <dt>Period</dt><dd>2022-04 — 2023-03</dd>
+        <dt>Engine</dt><dd>Unity / VR</dd>
+      </dl>
+      <section aria-label="Tools"><ul class="tools"><li aria-label="In-house script engine"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>In-house script engine</small></li><li aria-label="Google Sheets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.318 12.545H7.91v-1.909h3.41v1.91zM14.728 0v6h6l-6-6zm1.363 10.636h-3.41v1.91h3.41v-1.91zm0 3.273h-3.41v1.91h3.41v-1.91zM20.727 6.5v15.864c0 .904-.732 1.636-1.636 1.636H4.909a1.636 1.636 0 0 1-1.636-1.636V1.636C3.273.732 4.005 0 4.909 0h9.318v6.5h6.5zm-3.273 2.773H6.545v7.909h10.91v-7.91zm-6.136 4.636H7.91v1.91h3.41v-1.91z"/></svg><small>Google Sheets</small></li><li aria-label="Confluence"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.87 18.257c-.248.382-.53.875-.763 1.245a.764.764 0 0 0 .255 1.04l4.965 3.054a.764.764 0 0 0 1.058-.26c.199-.332.454-.763.733-1.221 1.967-3.247 3.945-2.853 7.508-1.146l4.957 2.337a.764.764 0 0 0 1.028-.382l2.364-5.346a.764.764 0 0 0-.382-1 599.851 599.851 0 0 1-4.965-2.361C10.911 10.97 5.224 11.185.87 18.257zM23.131 5.743c.249-.405.531-.875.764-1.25a.764.764 0 0 0-.256-1.034L18.675.404a.764.764 0 0 0-1.058.26c-.195.335-.451.763-.734 1.225-1.966 3.246-3.945 2.85-7.508 1.146L4.437.694a.764.764 0 0 0-1.027.382L1.046 6.422a.764.764 0 0 0 .382 1c1.039.49 3.105 1.467 4.965 2.361 6.698 3.246 12.392 3.029 16.738-4.04z"/></svg><small>Confluence</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul></section>
+      <h3>Challenge</h3><p>In VR the player can look anywhere, so scene building and cutscene direction have to carry the story on their own. Stealth sections, puzzles, props and narrative scenes all had to hold together within a 26-person development team.</p>
+      <h3>What I did</h3><ul><li>Developed 3D ADV cutscenes for VR.</li><li>Managed props across the Unity scenes.</li><li>Proposed NPC interactions and achievements.</li><li>Controlled the quality of the cutscene direction.</li><li>Balanced the stealth sections and the puzzles.</li><li>Revised English scripts and debugged builds.</li><li>Proposed improvements to the development tools.</li></ul>
+      <h3>Result</h3><p>Credited as Game Designer on the official staff page of the title.</p>
+    </dialog>
+    <dialog id="d-shadowverse-champions-battle" class="case suit-systems" aria-labelledby="t-shadowverse-champions-battle">
+      <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+      <p class="eyebrow">♠ Systems</p>
+      <h2 id="t-shadowverse-champions-battle">Shadowverse: Champion&#x27;s Battle</h2>
+      <img src="media/shadowverse.gif" alt="Shadowverse: Champion&#x27;s Battle gameplay: exploring the city with quest objective and minimap" loading="lazy">
+      <p class="credit">© Cygames, Inc. / trailer XSEEDgames</p>
+      <div class="shots"><figure><img src="media/shadowverse-01.jpg" alt="Shadowverse: Champion&#x27;s Battle gameplay: school club scene in the classroom" loading="lazy"><figcaption>© Cygames, Inc. / trailer XSEEDgames</figcaption></figure><figure><img src="media/shadowverse-02.jpg" alt="Shadowverse: Champion&#x27;s Battle story mode dialogue" loading="lazy"><figcaption>© Cygames, Inc. / © アニメ「シャドウバース」製作委員会・テレビ東京</figcaption></figure></div>
+      <dl>
+        <dt>Role</dt><dd>System Planner</dd>
+        <dt>Team</dt><dd>Approximately 70 people</dd>
+        <dt>Period</dt><dd>2020-01 — 2020-05</dd>
+        <dt>Engine</dt><dd>Unity / proprietary Cygames engine (inventory; exact engine unconfirmed)</dd>
+      </dl>
+      <section aria-label="Tools"><ul class="tools"><li aria-label="Lua"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.38 10.377l-.272-.037c-.048.344-.082.695-.101 1.041l.275.016c.018-.34.051-.682.098-1.02zM4.136 3.289l-.184-.205c-.258.232-.509.48-.746.734l.202.188c.231-.248.476-.49.728-.717zM5.769 2.059l-.146-.235c-.296.186-.586.385-.863.594l.166.219c.27-.203.554-.399.843-.578zM1.824 18.369c.185.297.384.586.593.863l.22-.164c-.205-.271-.399-.555-.58-.844l-.233.145zM1.127 16.402l-.255.104c.129.318.274.635.431.943l.005.01.245-.125-.005-.01c-.153-.301-.295-.611-.421-.922zM.298 9.309l.269.063c.076-.332.168-.664.272-.986l-.261-.087c-.108.332-.202.672-.28 1.01zM.274 12.42l-.275.01c.012.348.04.699.083 1.043l.273-.033c-.042-.336-.069-.68-.081-1.02zM.256 14.506c.073.34.162.682.264 1.014l.263-.08c-.1-.326-.187-.658-.258-.99l-.269.056zM11.573.275L11.563 0c-.348.012-.699.039-1.044.082l.034.273c.338-.041.68-.068 1.02-.08zM23.221 8.566c.1.326.186.66.256.992l.27-.059c-.072-.34-.16-.682-.262-1.014l-.264.081zM17.621 1.389c-.309-.164-.627-.314-.947-.449l-.107.252c.314.133.625.281.926.439l.128-.242zM15.693.572c-.332-.105-.67-.199-1.01-.277l-.063.268c.332.076.664.168.988.273l.085-.264zM6.674 1.545c.298-.15.606-.291.916-.418L7.486.873c-.317.127-.632.272-.937.428l-.015.008.125.244.015-.008zM23.727 11.588l.275-.01a11.797 11.797 0 0 0-.082-1.045l-.273.033c.041.338.068.682.08 1.022zM13.654.105c-.346-.047-.696-.08-1.043-.098l-.014.273c.339.018.683.051 1.019.098l.038-.273zM9.544.527l-.058-.27c-.34.072-.681.16-1.014.264l.081.262c.325-.099.659-.185.991-.256zM1.921 5.469l.231.15c.185-.285.384-.566.592-.834l-.217-.17c-.213.276-.417.563-.606.854zM.943 7.318l.253.107c.132-.313.28-.625.439-.924l-.243-.128c-.163.307-.314.625-.449.945zM18.223 21.943l.145.234c.295-.186.586-.385.863-.594l-.164-.219c-.272.204-.557.4-.844.579zM21.248 19.219l.217.17c.215-.273.418-.561.607-.854l-.23-.148c-.186.285-.385.564-.594.832zM19.855 20.715l.184.203c.258-.23.51-.479.746-.732l-.201-.188c-.23.248-.477.488-.729.717zM22.359 17.504l.244.129c.162-.307.314-.625.449-.945l-.254-.107a11.27 11.27 0 0 1-.439.923zM23.617 13.629l.273.039c.049-.346.082-.695.102-1.043l-.275-.014c-.018.338-.051.682-.1 1.018zM23.156 15.621l.264.086c.107-.332.201-.67.279-1.01l-.268-.063c-.077.333-.169.665-.275.987zM22.453 6.672c.154.303.297.617.424.932l.256-.104c-.131-.322-.277-.643-.436-.953l-.244.125zM8.296 23.418c.331.107.67.201 1.009.279l.062-.268c-.331-.076-.663-.168-.986-.273l-.085.262zM10.335 23.889c.345.049.696.082 1.043.102l.014-.275c-.339-.018-.682-.051-1.019-.098l-.038.271zM17.326 22.449c-.303.154-.613.297-.926.424l.104.256c.318-.131.639-.275.947-.434l.004-.002-.123-.246-.006.002zM4.613 21.467c.274.213.562.418.854.605l.149-.23c-.285-.184-.565-.385-.833-.592l-.17.217zM12.417 23.725l.009.275c.348-.014.699-.041 1.045-.084l-.035-.271c-.336.041-.68.068-1.019.08zM6.37 22.604c.307.162.625.314.946.449l.107-.254c-.313-.133-.624-.279-.924-.439l-.129.244zM3.083 20.041c.233.258.48.51.734.746l.188-.201c-.249-.23-.49-.477-.717-.729l-.205.184zM14.445 23.475l.059.27c.34-.074.68-.162 1.014-.266l-.082-.262c-.325.099-.659.185-.991.258zM21.18.129A2.689 2.689 0 1 0 21.18 5.507 2.689 2.689 0 1 0 21.18.129zM15.324 15.447c0 .471.314.66.852.66.67 0 1.297-.396 1.297-1.016v-.645c-.23.107-.379.141-1.107.24-.735.109-1.042.306-1.042.761zM12 2.818c-5.07 0-9.18 4.109-9.18 9.18 0 5.068 4.11 9.18 9.18 9.18 5.07 0 9.18-4.111 9.18-9.18 0-5.07-4.11-9.18-9.18-9.18zm-2.487 13.77H5.771v-6.023h.769v5.346h2.974v.677zm4.13 0h-.619v-.67c-.405.57-.811.793-1.446.793-.843 0-1.38-.463-1.38-1.182v-3.271h.686v3c0 .52.347.85.893.85.719 0 1.181-.578 1.181-1.461v-2.389h.686v4.33zm-.53-8.393c0-1.484 1.205-2.689 2.689-2.689s2.688 1.205 2.688 2.689-1.203 2.688-2.688 2.688-2.689-1.203-2.689-2.688zm5.567 7.856v.52c-.223.059-.33.074-.471.074-.34 0-.637-.238-.711-.57-.381.406-.918.637-1.471.637-.877 0-1.422-.463-1.422-1.248 0-.527.256-.916.76-1.123.266-.107.414-.141 1.389-.264.545-.066.719-.191.719-.48v-.182c0-.412-.348-.645-.967-.645-.645 0-.957.24-1.016.77h-.693c.041-1 .686-1.404 1.734-1.404 1.066 0 1.627.412 1.627 1.182v2.412c0 .215.133.338.373.338.041-.002.074-.002.149-.017z"/></svg><small>Lua</small></li><li aria-label="Confluence"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.87 18.257c-.248.382-.53.875-.763 1.245a.764.764 0 0 0 .255 1.04l4.965 3.054a.764.764 0 0 0 1.058-.26c.199-.332.454-.763.733-1.221 1.967-3.247 3.945-2.853 7.508-1.146l4.957 2.337a.764.764 0 0 0 1.028-.382l2.364-5.346a.764.764 0 0 0-.382-1 599.851 599.851 0 0 1-4.965-2.361C10.911 10.97 5.224 11.185.87 18.257zM23.131 5.743c.249-.405.531-.875.764-1.25a.764.764 0 0 0-.256-1.034L18.675.404a.764.764 0 0 0-1.058.26c-.195.335-.451.763-.734 1.225-1.966 3.246-3.945 2.85-7.508 1.146L4.437.694a.764.764 0 0 0-1.027.382L1.046 6.422a.764.764 0 0 0 .382 1c1.039.49 3.105 1.467 4.965 2.361 6.698 3.246 12.392 3.029 16.738-4.04z"/></svg><small>Confluence</small></li><li aria-label="Nintendo Dev Interface"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>Nintendo Dev Interface</small></li><li aria-label="Visual Studio Code"><span class="plate" aria-hidden="true">VI</span><small>Visual Studio Code</small></li><li aria-label="SourceForge"><span class="plate" aria-hidden="true">SO</span><small>SourceForge</small></li><li class="more" aria-label="3 more: Excel, Word, PowerPoint"><span class="plate">+3</span><small>more</small></li></ul></section>
+      <h3>Challenge</h3><p>Every quest had to stay reachable in whatever order the player took it, so unlock conditions, NPC spawning after completion, day/night branching and rewards formed one dependency graph. Each quest also needed its 3D cutscene staged and checked.</p>
+      <h3>What I did</h3><ul><li>Designed and implemented all main quests and side quests.</li><li>Built the quest logic: unlock conditions, NPC spawning after completion, day/night branching and reward settings.</li><li>Ensured completability across the entire quest graph.</li><li>Managed NPC placement and spawn conditions against the in-game clock.</li><li>Developed 3D ADV cutscenes and controlled the quality of their direction.</li><li>Debugged quest logic and cutscenes.</li></ul>
+      <h3>Result</h3><p>Owned the quest system of a Nintendo Switch title end to end, together with the direction of its cutscenes.</p>
+    </dialog>
+    <dialog id="d-bustafellows" class="case suit-scene" aria-labelledby="t-bustafellows">
+      <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+      <p class="eyebrow">♣ Scene & design</p>
+      <h2 id="t-bustafellows">BUSTAFELLOWS</h2>
+      <img src="media/bustafellows.gif" alt="BUSTAFELLOWS gameplay: choosing a reply in dialogue with Scarecrow" loading="lazy">
+      <p class="credit">© NIPPON CULTURAL BROADCASTING EXTEND INC.</p>
+      <div class="shots"><figure><img src="media/bustafellows-01.jpg" alt="BUSTAFELLOWS gameplay: dialogue scene with name plate and text window" loading="lazy"><figcaption>© NIPPON CULTURAL BROADCASTING EXTEND INC.</figcaption></figure><figure><img src="media/bustafellows-02.jpg" alt="BUSTAFELLOWS gameplay: in-game video call interface" loading="lazy"><figcaption>© NIPPON CULTURAL BROADCASTING EXTEND INC.</figcaption></figure></div>
+      <dl>
+        <dt>Role</dt><dd>Game Planner / Scene Direction</dd>
+        <dt>Team</dt><dd>Undisclosed (Indirect Contract)</dd>
+        <dt>Period</dt><dd>2019-01 — 2019-02</dd>
+        <dt>Engine</dt><dd>Unity; proprietary tools</dd>
+      </dl>
+      <section aria-label="Tools"><ul class="tools"><li aria-label="In-house script language"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>In-house script language</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul></section>
+      <h3>Challenge</h3><p>The mystery scenes and ADV cutscenes are what the reading experience rests on, so the staging had to be right. The work covered design, implementation, testing and live operation in a team of five.</p>
+      <h3>What I did</h3><ul><li>Staged scenes for story sequences as the scene director of the mobile version.</li><li>Developed the mystery-solving scenes.</li><li>Developed ADV cutscenes in Unity with the in-house script language.</li><li>Carried scene direction through design, implementation, testing and live operation.</li></ul>
+      <h3>Result</h3><p>Delivered the scene direction of the iOS and Android version from design through live operation.</p>
+    </dialog>
+    <dialog id="d-yuyuyui" class="case suit-liveops" aria-labelledby="t-yuyuyui">
+      <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+      <p class="eyebrow">♦ Live-ops</p>
+      <h2 id="t-yuyuyui">Yuki Yuna is a Hero: Hanayui no Kirameki</h2>
+      <img src="media/yuyuyui.gif" alt="Yuki Yuna is a Hero: Hanayui no Kirameki official PV gameplay animation" loading="lazy">
+      <p class="credit">(C)2017 Project 2H (C)KADOKAWA CORPORATION 2017</p>
+      <div class="shots"><figure><img src="media/yuyuyui-01.jpg" alt="Yuki Yuna is a Hero: Hanayui no Kirameki official game screen" loading="lazy"><figcaption>(C)2017 Project 2H (C)KADOKAWA CORPORATION 2017</figcaption></figure><figure><img src="media/yuyuyui-02.jpg" alt="Yuki Yuna is a Hero: Hanayui no Kirameki official event screen" loading="lazy"><figcaption>(C)2017 Project 2H (C)KADOKAWA CORPORATION 2017</figcaption></figure></div>
+      <dl>
+        <dt>Role</dt><dd>Game Planner / Script Planner</dd>
+        <dt>Team</dt><dd>Live-ops mobile team</dd>
+        <dt>Period</dt><dd>2019 — 2023</dd>
+        <dt>Engine</dt><dd>Unity; proprietary scripting system</dd>
+      </dl>
+      <section aria-label="Tools"><ul class="tools"><li aria-label="In-house script language"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>In-house script language</small></li><li aria-label="Google Sheets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.318 12.545H7.91v-1.909h3.41v1.91zM14.728 0v6h6l-6-6zm1.363 10.636h-3.41v1.91h3.41v-1.91zm0 3.273h-3.41v1.91h3.41v-1.91zM20.727 6.5v15.864c0 .904-.732 1.636-1.636 1.636H4.909a1.636 1.636 0 0 1-1.636-1.636V1.636C3.273.732 4.005 0 4.909 0h9.318v6.5h6.5zm-3.273 2.773H6.545v7.909h10.91v-7.91zm-6.136 4.636H7.91v1.91h3.41v-1.91z"/></svg><small>Google Sheets</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul></section>
+      <h3>Challenge</h3><p>A live-ops mobile title worked on in three stints between October 2019 and September 2023. Events and their ADV cutscenes had to be scheduled and quality-checked continuously, each stint with a team of three.</p>
+      <h3>What I did</h3><ul><li>Developed ADV cutscenes for story events on a live schedule.</li><li>Controlled the quality of the cutscene direction.</li><li>Managed the schedules of events and their ADV direction in Google Sheets.</li><li>Built scenes in Unity with the in-house script language.</li><li>Supported the title in live operation until the end of service.</li></ul>
+      <h3>Result</h3><p>Ran cutscene development, quality control and event scheduling across three live-ops stints between October 2019 and September 2023.</p>
+    </dialog>
+    <dialog id="d-shinen-resist" class="case suit-story" aria-labelledby="t-shinen-resist">
+      <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+      <p class="eyebrow">♥ Story</p>
+      <h2 id="t-shinen-resist">Shinen Resist</h2>
+      <img src="media/shinen-resist.gif" alt="Shinen Resist official opening animation" loading="lazy">
+      <p class="credit">(C)2018 集英社</p>
+      <div class="shots"><figure><img src="media/shinen-resist-01.jpg" alt="Shinen Resist official ADV story scene screenshot" loading="lazy"><figcaption>(C)2018 集英社</figcaption></figure><figure><img src="media/shinen-resist-02.jpg" alt="Shinen Resist official ADV dialogue screenshot" loading="lazy"><figcaption>(C)2018 集英社</figcaption></figure></div>
+      <dl>
+        <dt>Role</dt><dd>Script Lead</dd>
+        <dt>Team</dt><dd>5 (led 4 scripters)</dd>
+        <dt>Period</dt><dd>2017-12 — 2019-01</dd>
+        <dt>Engine</dt><dd>Unity; proprietary script engine</dd>
+      </dl>
+      <section aria-label="Tools"><ul class="tools"><li aria-label="In-house script language"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>In-house script language</small></li><li aria-label="SharePoint"><span class="plate" aria-hidden="true">SH</span><small>SharePoint</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul></section>
+      <h3>Challenge</h3><p>Scene direction on a live mobile RPG where, from March 2018, four scripters had to be directed and new script engine features specified alongside running production. Progress was presented at regular meetings, so the schedule had to hold.</p>
+      <h3>What I did</h3><ul><li>Directed scenes through design, implementation and live operation.</li><li>Led four scripters as script lead from March 2018.</li><li>Planned new features for the script engine.</li><li>Managed the team members&#x27; schedules.</li><li>Controlled the quality of the scene direction.</li><li>Presented progress at regular meetings, preparing materials in PowerPoint and Word.</li></ul>
+      <h3>Result</h3><p>Held scene direction and scripting leadership from December 2017 to January 2019, leading four scripters from March 2018.</p>
+    </dialog>
+    <dialog id="d-shacho-battle" class="case suit-systems" aria-labelledby="t-shacho-battle">
+      <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+      <p class="eyebrow">♠ Systems</p>
+      <h2 id="t-shacho-battle">Shacho, Battle no Jikan desu!</h2>
+      <img src="media/shacho-battle.gif" alt="Shacho, Battle no Jikan desu! mobile gameplay: enemy skill hits the party" loading="lazy">
+      <p class="credit">©KADOKAWA CORPORATION 2019 ©でらゲー ©PREAPP PARTNERS</p>
+      <div class="shots"><figure><img src="media/shacho-battle-01.jpg" alt="Shacho, Battle no Jikan desu! Steam version gameplay: grid battle at Inferno Mountain" loading="lazy"><figcaption>©KADOKAWA CORPORATION 2021 ©PREAPP PARTNERS</figcaption></figure><figure><img src="media/shacho-battle-02.jpg" alt="Shacho, Battle no Jikan desu! Steam version gameplay: grid battle at Blade Wastelands" loading="lazy"><figcaption>©KADOKAWA CORPORATION 2021 ©PREAPP PARTNERS</figcaption></figure></div>
+      <dl>
+        <dt>Role</dt><dd>Game Planner</dd>
+        <dt>Team</dt><dd>4</dd>
+        <dt>Period</dt><dd>2017-04 — 2017-12, 2019</dd>
+        <dt>Engine</dt><dd>Unity; Excel; Google Spreadsheets; Confluence</dd>
+      </dl>
+      <section aria-label="Tools"><ul class="tools"><li aria-label="Google Sheets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.318 12.545H7.91v-1.909h3.41v1.91zM14.728 0v6h6l-6-6zm1.363 10.636h-3.41v1.91h3.41v-1.91zm0 3.273h-3.41v1.91h3.41v-1.91zM20.727 6.5v15.864c0 .904-.732 1.636-1.636 1.636H4.909a1.636 1.636 0 0 1-1.636-1.636V1.636C3.273.732 4.005 0 4.909 0h9.318v6.5h6.5zm-3.273 2.773H6.545v7.909h10.91v-7.91zm-6.136 4.636H7.91v1.91h3.41v-1.91z"/></svg><small>Google Sheets</small></li><li aria-label="Confluence"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.87 18.257c-.248.382-.53.875-.763 1.245a.764.764 0 0 0 .255 1.04l4.965 3.054a.764.764 0 0 0 1.058-.26c.199-.332.454-.763.733-1.221 1.967-3.247 3.945-2.853 7.508-1.146l4.957 2.337a.764.764 0 0 0 1.028-.382l2.364-5.346a.764.764 0 0 0-.382-1 599.851 599.851 0 0 1-4.965-2.361C10.911 10.97 5.224 11.185.87 18.257zM23.131 5.743c.249-.405.531-.875.764-1.25a.764.764 0 0 0-.256-1.034L18.675.404a.764.764 0 0 0-1.058.26c-.195.335-.451.763-.734 1.225-1.966 3.246-3.945 2.85-7.508 1.146L4.437.694a.764.764 0 0 0-1.027.382L1.046 6.422a.764.764 0 0 0 .382 1c1.039.49 3.105 1.467 4.965 2.361 6.698 3.246 12.392 3.029 16.738-4.04z"/></svg><small>Confluence</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul></section>
+      <h3>Challenge</h3><p>Two stints on the same mobile RPG: new feature design in 2017 and stage and combat design in 2019. Specifications, master data and balance were owned by the same person in both periods.</p>
+      <h3>What I did</h3><ul><li>Wrote feature specifications, both overview and detailed.</li><li>Created character and event master data.</li><li>Wrote ADV-part scripts and staged them.</li><li>Drafted animation plans for staged sequences.</li><li>Balanced new features, character data and event data.</li><li>Planned stage themes and tuned enemy parameters and placement to match them.</li><li>Balanced skills and equipment.</li><li>Managed the team schedule and debugged builds.</li></ul>
+      <h3>Result</h3><p>Delivered feature specifications, master data and combat balance for the same title across the 2017 and 2019 stints.</p>
+    </dialog>
+    <dialog id="d-personal-lab" class="case suit-personal" aria-labelledby="t-personal-lab">
+      <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+      <p class="eyebrow">✦ Personal exploration</p>
+      <h2 id="t-personal-lab">Personal lab</h2>
+      <p>A place to learn by experimenting with concept art, AI-assisted game prototypes, local models and multi-agent orchestration.</p>
+      <div class="shots"><figure><img src="media/concept/coven-workshop-v1.jpg" alt="Concept art of a magical workshop" loading="lazy"><figcaption>AI-assisted concept art</figcaption></figure><figure><img src="media/concept/table-horror-night-v1.jpg" alt="Concept art of a nighttime horror scene around a D&amp;D gaming table" loading="lazy"><figcaption>AI-assisted concept art</figcaption></figure></div>
+      <section aria-label="Tools"><ul class="tools"><li aria-label="Godot"><span class="plate" aria-hidden="true">GO</span><small>Godot</small></li><li aria-label="Unity"><span class="plate" aria-hidden="true">UN</span><small>Unity</small></li><li aria-label="Ollama"><span class="plate" aria-hidden="true">OL</span><small>Ollama</small></li><li aria-label="Claude Code"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg><small>Claude Code</small></li></ul></section>
+      <h3>What I am exploring</h3><ul><li>Creating concept art with AI image tools.</li><li>Prototyping a horror game in Godot with AI assistance, set around a D&amp;D gaming table.</li><li>Building small AI-assisted prototypes in Unity.</li><li>Learning to run local models with Ollama on an RTX 3060.</li><li>Orchestrating a multi-agent council with Claude Code.</li></ul>
+    </dialog>
+<script>
+const mode=document.getElementById('mode'),slot=document.getElementById('slot'),
+ hoverable=matchMedia('(hover: hover)').matches,still=matchMedia('(prefers-reduced-motion: reduce)').matches,
+ listMode=()=>document.body.classList.contains('list'),show=id=>document.getElementById(id).showModal();
+mode.addEventListener('click',()=>{const on=document.body.classList.toggle('list');mode.setAttribute('aria-pressed',on);mode.textContent=on?'Fan view':'List view'});
+function play(c){
+ if(listMode())return show(c.dataset.open);
+ cards.forEach(x=>x.classList.remove('played'));
+ const mini=c.cloneNode(true);mini.removeAttribute('style');mini.className=c.className+' mini';
+ mini.addEventListener('click',()=>show(mini.dataset.open));
+ mini.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();show(mini.dataset.open)}});
+ const land=()=>{slot.replaceChildren(mini);slot.classList.add('filled');c.classList.add('played');show(c.dataset.open)};
+ if(still)return land();
+ const a=c.getBoundingClientRect(),b=slot.getBoundingClientRect(),w=c.offsetWidth,h=c.offsetHeight,
+  fly=c.cloneNode(true);fly.removeAttribute('tabindex');
+ fly.style.cssText=`position:fixed;left:${a.left+a.width/2-w/2}px;top:${a.top+a.height/2-h/2}px;width:${w}px;height:${h}px;margin:0;z-index:50;pointer-events:none`;
+ document.body.append(fly);c.classList.add('played');
+ const dx=b.left+b.width/2-(a.left+a.width/2),dy=b.top+b.height/2-(a.top+a.height/2);
+ fly.animate([{transform:'none'},{transform:`translate(${dx}px,${dy}px) scale(${b.width/w})`}],{duration:420,easing:'cubic-bezier(.2,.8,.2,1)'})
+  .finished.then(()=>{fly.remove();land()});
+}
+const cards=[...document.querySelectorAll('.table .card')];
+// поднятая карта показывает больше, соседи разъезжаются в стороны
+function lift(c){const k=cards.indexOf(c);cards.forEach((x,i)=>{x.classList.toggle('lifted',x===c);x.style.setProperty('--push',k<0?0:Math.sign(i-k))})}
+let haptic;
+function buzz(){try{
+ if(navigator.vibrate)return navigator.vibrate(8);
+ if(!haptic){haptic=document.createElement('label');haptic.setAttribute('aria-hidden','true');
+  haptic.style.cssText='position:fixed;opacity:0;pointer-events:none;left:-99px';
+  haptic.innerHTML='<input type="checkbox" switch tabindex="-1">';
+  haptic.addEventListener('click',ev=>ev.stopPropagation());document.body.append(haptic)}
+ haptic.click();
+}catch(_){}}
+if(!hoverable){
+ slot.querySelector('small').textContent='Slide to pick a card, tap again to play it';
+ const table=document.querySelector('.table');let drag;
+ const nearest=x=>cards[drag.centres.reduce((best,c,i,a)=>Math.abs(c-x)<Math.abs(a[best]-x)?i:best,0)];
+ table.addEventListener('touchstart',ev=>{
+  drag=null;if(listMode()||ev.touches.length!==1||!ev.target.closest('.card'))return;
+  const t=ev.touches[0],before=cards.find(c=>c.classList.contains('lifted'));
+  // Снимаем центры исходного веера, без разъехавшихся соседей.
+  table.classList.add('measuring');lift(null);
+  const centres=cards.map(c=>{const r=c.getBoundingClientRect();return r.left+r.width/2});
+  lift(before);table.getBoundingClientRect();table.classList.remove('measuring');
+  drag={id:t.identifier,x:t.clientX,y:t.clientY,dx:0,dy:0,axis:null,before,centres};
+  drag.card=nearest(t.clientX);lift(drag.card);
+ },{passive:true});
+ table.addEventListener('touchmove',ev=>{
+  if(!drag||listMode())return;
+  const t=[...ev.touches].find(t=>t.identifier===drag.id);if(!t)return;
+  drag.dx=t.clientX-drag.x;drag.dy=t.clientY-drag.y;
+  if(!drag.axis&&Math.max(Math.abs(drag.dx),Math.abs(drag.dy))>8)
+   drag.axis=Math.abs(drag.dx)>Math.abs(drag.dy)?'x':'y';
+  if(drag.axis!=='x')return;
+  ev.preventDefault();const c=nearest(t.clientX);
+  if(c!==drag.card){drag.card=c;lift(c);buzz()}
+ },{passive:false});
+ table.addEventListener('touchend',ev=>{
+  if(!drag||![...ev.changedTouches].some(t=>t.identifier===drag.id))return;
+  const d=drag;drag=null;if(listMode()||d.axis==='y')return;
+  ev.preventDefault();
+  if(Math.hypot(d.dx,d.dy)<10&&d.card===d.before){lift(null);play(d.card)}
+ },{passive:false});
+ table.addEventListener('touchcancel',()=>{drag=null});
+}
+document.addEventListener('click',ev=>{if(!ev.target.closest('.card'))lift(null)});
+document.querySelectorAll('.suit-f').forEach(b=>b.addEventListener('click',()=>{
+ const on=b.getAttribute('aria-pressed')!=='true';
+ document.querySelectorAll('.suit-f').forEach(x=>x.setAttribute('aria-pressed',x===b&&on));
+ document.body.classList.toggle('filtering',on);
+ cards.forEach(c=>c.classList.toggle('dim',on&&!c.classList.contains('suit-'+b.dataset.suit)))}));
+cards.forEach(c=>{
+ c.addEventListener('click',()=>{
+  // касание без наведения: первый тап поднимает карту, второй разыгрывает
+  if(!hoverable&&!listMode()&&!c.classList.contains('lifted'))return lift(c);
+  lift(null);play(c)});
+ c.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();play(c)}});
+});
+document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click',ev=>{if(ev.target===d)d.close()}));
+// на картах скрины сменяют друг друга раз в 3 с; reduced-motion — только первый
+if(!still)setInterval(()=>document.querySelectorAll('.frame').forEach(f=>{
+ const s=[...f.querySelectorAll('img')];if(s.length<2)return;
+ const i=s.findIndex(x=>x.classList.contains('on'));
+ s[i<0?0:i].classList.remove('on');s[(i+1)%s.length].classList.add('on')}),3000);
+</script>
+</body>
+</html>
