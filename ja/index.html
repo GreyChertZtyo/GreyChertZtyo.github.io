@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>白熊 龍空 — ゲームデザイナー</title>
+<style>
+:root{color-scheme:dark;--bg:#111212;--panel:#1a1d1b;--ink:#f3f2eb;--muted:#b1b6ae;--accent:#d1ed8b;--line:#343832;
+--systems:#8bb8ed;--liveops:#edc88b;--story:#ed8b9a;--scene:#b48bed;--personal:#8bedcf}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Arial,Helvetica,sans-serif;overflow-x:hidden}
+header{max-width:1200px;margin:auto;padding:24px 16px 0;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+header h1{font-size:clamp(28px,5vw,44px);font-weight:500;letter-spacing:-.03em;margin:0;display:flex;align-items:center;gap:14px}
+.avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;object-position:50% 30%;flex:none}
+.role{margin:0;color:var(--muted)}
+.links{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 18px;padding:0;margin:0;font-size:13px}
+a{color:var(--accent)}
+header h2{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.legend{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:0;margin:0}
+.suit-f{background:none;border:1px solid var(--suit);color:var(--suit);border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
+.suit-f span{font-size:16px}.suit-f[aria-pressed=true]{background:var(--suit);color:var(--bg)}
+.suit-f:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.table .card.dim{opacity:.22;filter:grayscale(1)}
+body.filtering .table .card:not(.dim){z-index:15;box-shadow:0 0 0 2px var(--suit),0 10px 30px #0008}
+#mode,#all,a.pdf{background:none;border:1px solid var(--accent);color:var(--accent);padding:8px 14px;font:inherit;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block;line-height:1.5}
+#all[hidden]{display:none}
+#mode:focus-visible,#all:focus-visible,a.pdf:focus-visible,.card:focus-visible,.close:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+.suit-systems{--suit:var(--systems)}.suit-liveops{--suit:var(--liveops)}.suit-story{--suit:var(--story)}.suit-scene{--suit:var(--scene)}
+.suit-personal{--suit:var(--personal)}
+.card{position:relative;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--suit);border-radius:14px;
+padding:12px 14px 16px;cursor:pointer;box-shadow:0 10px 30px #0008;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.drop{display:none;position:absolute;top:8px;right:8px;z-index:2;width:28px;height:28px;border:1px solid var(--line);border-radius:50%;background:var(--bg);color:var(--ink);font:22px/20px Arial;cursor:pointer}
+body:not(.list) .table .card.lifted .drop,.slot .card.mini .drop{display:block}
+.corner{position:absolute;top:8px;left:8px;z-index:1;background:#111c;border:1px solid var(--suit);border-radius:8px;padding:3px 7px;
+text-align:center;line-height:1.1;color:var(--suit)}
+.corner b{display:block;font-size:11px;letter-spacing:.08em}.corner span{font-size:16px}
+.frame{position:relative;aspect-ratio:16/10;background:#242922;border-radius:8px;overflow:hidden}
+.frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 1s ease}
+.frame img.on{opacity:1}
+.tools{list-style:none;display:flex;gap:6px;padding:0;margin:0}
+.tools li{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tools svg,.plate{width:22px;height:22px}.tools svg{fill:var(--ink)}
+.plate{display:grid;place-items:center;border:1px solid var(--muted);border-radius:5px;font-size:9px;font-weight:700;color:var(--muted)}
+.tools small{font-size:8px;color:var(--muted);text-align:center;line-height:1.1;hyphens:auto;max-width:100%}
+.card h2{font-size:21px;font-weight:500;letter-spacing:-.02em;margin:2px 0 0}
+.meta{margin:0;font-size:12px;color:var(--suit)}
+.summary{margin:0;font-size:13.5px;color:var(--muted)}
+.suit-big{position:absolute;right:10px;bottom:4px;font-size:30px;color:var(--suit);opacity:.5}
+/* стол: слот сверху, веер снизу */
+.slot{display:grid;place-items:center;margin:20px auto 0;width:200px;min-height:260px;border:2px dashed var(--line);border-radius:14px;
+color:var(--muted);text-align:center;padding:12px}
+.slot .pick{font-size:22px;letter-spacing:.04em;color:var(--ink)}.slot small{display:block;font-size:12px;margin-top:6px}
+.slot.filled{border-color:transparent;padding:0;place-items:stretch}
+.card.mini{width:100%;min-height:0}.card.mini .tools,.card.mini .summary,.card.mini .suit-big{display:none}
+body.list .slot{display:none}
+body:not(.list) .table .card.played{opacity:.3}
+.table{position:relative;margin:8px 0 0;height:600px;overflow-x:clip}
+body:not(.list) .table .card{position:absolute;z-index:var(--z);transform-origin:50% 120%;transition:transform .25s,box-shadow .25s,opacity .25s}
+@media(min-width:900px){
+ body:not(.list) .table{height:470px}
+ body:not(.list) .table .card{bottom:30px;left:calc(50% - 125px + var(--o) * min(112px, (100vw - 420px) / var(--fan-steps)));width:250px;min-height:420px;
+  transform:translateY(var(--y)) rotate(var(--r))}
+ header{padding-top:16px;gap:8px}header h1{font-size:36px}.slot{width:170px;min-height:230px;margin-top:12px}.card.mini h2{font-size:17px}
+}
+@media(max-width:899.98px){
+ body:not(.list) .table{height:400px}
+ body:not(.list) .table .card{bottom:24px;left:calc(50% - 100px + var(--o) * (100vw - 216px) / var(--fan-steps));width:200px;min-height:300px;padding:10px 10px 12px;gap:6px;
+  transform:translateY(var(--y)) translateX(calc(var(--push,0) * 56px)) rotate(calc(var(--r) * 1.4))}
+ body:not(.list) .table .card:not(.lifted) :is(.summary,.tools small){display:none}
+ body:not(.list) .table .card .suit-big{display:none}
+ body:not(.list) .table .card h2{font-size:17px}
+ body:not(.list) .table .card :is(.tools svg,.plate){width:20px;height:20px}
+ body:not(.list) main.table .card.lifted{transform:translateY(-70px) scale(1.12)}
+ .slot{width:130px;min-height:170px;margin-top:10px;padding:8px}.slot .pick{font-size:17px}.card.mini h2{font-size:14px}
+ body:not(.list) .table{height:330px}
+ header{padding-top:14px;gap:6px}header h1{font-size:26px}.role{font-size:13px}.links{font-size:12px;gap:2px 14px}
+  .tools small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .suit-f{font-size:12px;padding:4px 9px}#mode,#all,a.pdf{padding:4px 10px;font-size:12px;border-radius:999px}
+}
+body:not(.list) .table .card.lifted,body:not(.list) .table .card:focus-visible{z-index:20;opacity:1;transform:translateY(-40px) rotate(0) scale(1.06);box-shadow:0 24px 50px #000c}
+@media(hover:none){body:not(.list) .table .card{touch-action:pan-y}}
+.table.measuring .card{transition:none!important}
+@media(hover:hover){body:not(.list) .table .card:hover{z-index:20;opacity:1;transform:translateY(-40px) rotate(0) scale(1.06);box-shadow:0 24px 50px #000c}}
+/* списком */
+body.list .table{height:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:20px;padding:0 16px 40px}
+body.list .table .card{order:var(--list)}
+/* раскрытый кейс */
+dialog.case{width:min(760px,calc(100vw - 24px));max-height:calc(100dvh - 24px);background:var(--panel);color:var(--ink);
+border:1px solid var(--line);border-top:5px solid var(--suit);border-radius:14px;padding:22px clamp(16px,4vw,36px) 30px}
+dialog::backdrop{background:#000b}
+dialog h2{font-size:clamp(26px,5vw,38px);font-weight:500;margin:4px 0 14px}
+dialog img{width:100%;max-height:360px;object-fit:contain;background:#242922;border-radius:8px;display:block}
+.credit{font-size:10px;color:var(--muted);margin:6px 0 14px}
+.eyebrow{color:var(--suit);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin:0}
+dialog dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0 0 10px}
+dialog dt{color:var(--accent);font-size:11px;text-transform:uppercase;letter-spacing:.12em;padding-top:2px}dialog dd{margin:0}
+dialog .shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:10px 0}
+dialog .shots figure{margin:0}dialog .shots img{width:100%;height:auto;border-radius:8px;display:block}
+dialog .shots figcaption{font-size:11px;opacity:.6;margin-top:4px}
+dialog h3{color:var(--accent);font-size:13px;text-transform:uppercase;letter-spacing:.12em;margin:22px 0 6px}
+dialog p,dialog li{color:var(--muted);overflow-wrap:anywhere}dialog ul{padding-left:20px;margin:0}dialog li+li{margin-top:6px}
+dialog ul.tools{padding:0;margin:10px 0}dialog .tools li+li{margin-top:0}dialog .tools small{white-space:normal;overflow:visible}
+.close{position:sticky;top:0;float:right;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:50%;
+width:40px;height:40px;font-size:22px;cursor:pointer}
+.about{max-width:760px;margin:40px auto 0;padding:32px 16px 48px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:24px}
+.about h2{font-size:28px;font-weight:500;margin:4px 0}.about p{color:var(--muted)}.about .about-role{color:var(--ink)}
+.about .eyebrow{color:var(--accent)}.portrait{width:160px;height:160px;object-fit:cover;border-radius:50%}
+.portrait-print{display:none}
+.about-list{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:4px 18px;font-size:14px}
+/* PDF: профиль, о себе и все кейсы по очереди, без стола */
+@media print{
+ @page{margin:10mm}
+ :root{color-scheme:light;--bg:#fff;--panel:#fff;--ink:#111;--muted:#333;--accent:#3a5a0a;--line:#ccc}
+ body>header,.slot,.table,.close{display:none!important}
+ .about{margin-top:12px;break-after:page;flex-wrap:nowrap;align-items:flex-start}
+ .portrait-site{display:none}.portrait-print{display:block;width:30mm;height:40mm;object-fit:cover;border-radius:0;flex:none}
+ dialog.case{display:grid;grid-template-columns:42% minmax(0,1fr);column-gap:18px;position:static;width:auto;max-height:none;border:0;border-top:5px solid var(--suit);border-radius:0;padding:12px 0;margin:0;break-before:page;break-inside:avoid;font-size:11px;line-height:1.4}
+ dialog.case>form{display:none}dialog.case>*{grid-column:2;min-width:0}dialog.case>.eyebrow,dialog.case>h2{grid-column:1/-1}
+ dialog.case>img{grid-column:1;grid-row:3/5;max-height:180px;background:none}dialog.case>.credit{grid-column:1;grid-row:5;font-size:10px;margin:4px 0}
+ dialog.case>.shots{grid-column:1;grid-row:3/7;grid-template-columns:1fr;align-content:start;gap:8px;margin:0}dialog.case:has(>img)>.shots{grid-row:6/11}
+ dialog .shots img{max-height:150px;object-fit:contain;background:none}dialog .shots figcaption{font-size:10px}
+ dialog h2{font-size:26px;margin:4px 0 12px}dialog h3{font-size:11px;margin:10px 0 4px}dialog p{margin:0 0 8px}dialog li+li{margin-top:4px}
+ dialog dl{gap:3px 10px}dialog dt{font-size:10px}dialog ul.tools{margin:6px 0}dialog .tools small{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+:lang(ja){font-family:"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif}</style>
+</head>
+<body style="--fan-steps:8">
+<header>
+  <h1><img class="avatar" src="../media/profile/avatar-site.jpg" alt="写真 白熊 龍空" width="56" height="56">白熊 龍空</h1><p class="role">ゲームデザイナー／テクニカルデザイナー · 日本・東京</p><ul class="links"><li><a href="https://www.linkedin.com/in/riku-shirokuma-204280117">LinkedIn ↗</a></li><li><a href="https://www.mobygames.com/game/249085/pokemon-legends-z-a/credits/switch/">Pokémon Legends Z-A credits ↗</a></li><li><a href="https://dyschroniaca.com/en/staffcast/staff.html">DYSCHRONIA staff ↗</a></li><li><a href="#about">プロフィール ↓</a></li><li><a href="../index.html">English</a></li></ul>
+  <h2>代表作</h2>
+  <ul class="legend" aria-label="分野で絞り込む"><li><button type="button" class="suit-f suit-systems" data-suit="systems" aria-pressed="false"><span>♠</span> システム</button></li><li><button type="button" class="suit-f suit-liveops" data-suit="liveops" aria-pressed="false"><span>♦</span> ライブ運営</button></li><li><button type="button" class="suit-f suit-story" data-suit="story" aria-pressed="false"><span>♥</span> ストーリー</button></li><li><button type="button" class="suit-f suit-scene" data-suit="scene" aria-pressed="false"><span>♣</span> 演出・デザイン</button></li><li><button type="button" class="suit-f suit-personal" data-suit="personal" aria-pressed="false"><span>✦</span> 個人ラボ</button></li><li><button id="all" type="button" hidden>すべて</button></li><li><button id="mode" type="button" aria-pressed="false">一覧表示</button></li><li><a class="pdf" href="portfolio.pdf" download>PDFをダウンロード ↓</a></li></ul>
+</header>
+<section id="slot" class="slot" aria-live="polite"><p><span class="pick">カードを選ぶ</span><small>カードをタップすると持ち上がり、もう一度タップすると開きます</small></p></section>
+<main id="work" class="table">
+    <article class="card suit-story" style="--o:-4.0;--r:-16.0deg;--y:48px;--z:0;--list:6" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-shinen-resist" data-open="d-shinen-resist">
+      <button type="button" class="drop" aria-label="戻す">×</button>
+      <div class="corner" aria-label="役割: スクリプトリーダー; 分野: ストーリー"><b>LEAD</b><span>♥</span></div>
+      <div class="frame"><img src="../media/shinen-resist-01.jpg" alt="『シンエンレジスト』公式ADVストーリーシーンのスクリーンショット" loading="lazy" class=on><img src="../media/shinen-resist-02.jpg" alt="『シンエンレジスト』公式ADV会話シーンのスクリーンショット" loading="lazy"></div>
+      <ul class="tools"><li aria-label="In-house script language"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>In-house script language</small></li><li aria-label="SharePoint"><span class="plate" aria-hidden="true">SH</span><small>SharePoint</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul>
+      <h2>シンエンレジスト</h2>
+      <p class="meta">スクリプトリーダー · 2017年12月〜2019年1月</p>
+      <p class="summary">モバイルRPGにおけるシーン演出およびスクリプトリーダー。スクリプター4名のディレクションと、スクリプトエンジンの新規機能企画を担当。</p>
+      <span class="suit-big" aria-hidden="true">♥</span>
+    </article>
+    <article class="card suit-liveops" style="--o:-3.0;--r:-12.0deg;--y:27px;--z:1;--list:5" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-yuyuyui" data-open="d-yuyuyui">
+      <button type="button" class="drop" aria-label="戻す">×</button>
+      <div class="corner" aria-label="役割: ゲームプランナー／スクリプトプランナー; 分野: ライブ運営"><b>SCRIPT</b><span>♦</span></div>
+      <div class="frame"><img src="../media/yuyuyui-01.jpg" alt="『結城友奈は勇者である 花結いのきらめき』公式ゲーム画面" loading="lazy" class=on><img src="../media/yuyuyui-02.jpg" alt="『結城友奈は勇者である 花結いのきらめき』公式イベント画面" loading="lazy"></div>
+      <ul class="tools"><li aria-label="In-house script language"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>In-house script language</small></li><li aria-label="Google Sheets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.318 12.545H7.91v-1.909h3.41v1.91zM14.728 0v6h6l-6-6zm1.363 10.636h-3.41v1.91h3.41v-1.91zm0 3.273h-3.41v1.91h3.41v-1.91zM20.727 6.5v15.864c0 .904-.732 1.636-1.636 1.636H4.909a1.636 1.636 0 0 1-1.636-1.636V1.636C3.273.732 4.005 0 4.909 0h9.318v6.5h6.5zm-3.273 2.773H6.545v7.909h10.91v-7.91zm-6.136 4.636H7.91v1.91h3.41v-1.91z"/></svg><small>Google Sheets</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul>
+      <h2>結城友奈は勇者である 花結いのきらめき</h2>
+      <p class="meta">ゲームプランナー／スクリプトプランナー · 2019年〜2023年</p>
+      <p class="summary">モバイルタイトルの運用に3期間にわたり参画し、サービス終了までADVカットシーン開発およびイベント演出のスケジュール管理を担当。</p>
+      <span class="suit-big" aria-hidden="true">♦</span>
+    </article>
+    <article class="card suit-scene" style="--o:-2.0;--r:-8.0deg;--y:12px;--z:2;--list:2" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-dyschronia" data-open="d-dyschronia">
+      <button type="button" class="drop" aria-label="戻す">×</button>
+      <div class="corner" aria-label="役割: ゲームデザイナー; 分野: 演出・デザイン"><b>GD</b><span>♣</span></div>
+      <div class="frame"><img src="../media/dyschronia-01.jpg" alt="『DYSCHRONIA: Chronos Alternate』メモリーダイブのゲームプレイスクリーンショット" loading="lazy" class=on><img src="../media/dyschronia-02.jpg" alt="『DYSCHRONIA: Chronos Alternate』パズルパートのゲームプレイスクリーンショット" loading="lazy"></div>
+      <ul class="tools"><li aria-label="In-house script engine"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>In-house script engine</small></li><li aria-label="Google Sheets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.318 12.545H7.91v-1.909h3.41v1.91zM14.728 0v6h6l-6-6zm1.363 10.636h-3.41v1.91h3.41v-1.91zm0 3.273h-3.41v1.91h3.41v-1.91zM20.727 6.5v15.864c0 .904-.732 1.636-1.636 1.636H4.909a1.636 1.636 0 0 1-1.636-1.636V1.636C3.273.732 4.005 0 4.909 0h9.318v6.5h6.5zm-3.273 2.773H6.545v7.909h10.91v-7.91zm-6.136 4.636H7.91v1.91h3.41v-1.91z"/></svg><small>Google Sheets</small></li><li aria-label="Confluence"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.87 18.257c-.248.382-.53.875-.763 1.245a.764.764 0 0 0 .255 1.04l4.965 3.054a.764.764 0 0 0 1.058-.26c.199-.332.454-.763.733-1.221 1.967-3.247 3.945-2.853 7.508-1.146l4.957 2.337a.764.764 0 0 0 1.028-.382l2.364-5.346a.764.764 0 0 0-.382-1 599.851 599.851 0 0 1-4.965-2.361C10.911 10.97 5.224 11.185.87 18.257zM23.131 5.743c.249-.405.531-.875.764-1.25a.764.764 0 0 0-.256-1.034L18.675.404a.764.764 0 0 0-1.058.26c-.195.335-.451.763-.734 1.225-1.966 3.246-3.945 2.85-7.508 1.146L4.437.694a.764.764 0 0 0-1.027.382L1.046 6.422a.764.764 0 0 0 .382 1c1.039.49 3.105 1.467 4.965 2.361 6.698 3.246 12.392 3.029 16.738-4.04z"/></svg><small>Confluence</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul>
+      <h2>DYSCHRONIA: Chronos Alternate</h2>
+      <p class="meta">ゲームデザイナー · 2022年4月〜2023年3月</p>
+      <p class="summary">Meta Quest 2向けVRアドベンチャーのUnityによるストーリーシーン制作。3Dカットシーン、プロップ管理、NPCインタラクション、ステルスおよびパズルのバランス調整を担当。</p>
+      <span class="suit-big" aria-hidden="true">♣</span>
+    </article>
+    <article class="card suit-story" style="--o:-1.0;--r:-4.0deg;--y:3px;--z:3;--list:1" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-pokemon-legends-z-a" data-open="d-pokemon-legends-z-a">
+      <button type="button" class="drop" aria-label="戻す">×</button>
+      <div class="corner" aria-label="役割: プランナー（ストーリーチーム）; 分野: ストーリー"><b>STORY</b><span>♥</span></div>
+      <div class="frame"><img src="../media/pokemon-01.jpg" alt="『ポケモンレジェンズ Z-A』プロモーションスクリーンショット P02_02" loading="lazy" class=on><img src="../media/pokemon-02.jpg" alt="『ポケモンレジェンズ Z-A』プロモーションスクリーンショット P02_04" loading="lazy"><img src="../media/pokemon-03.jpg" alt="『ポケモンレジェンズ Z-A』ゲームプレイ：技コマンドが表示されたフィールドバトルのHUD" loading="lazy"></div>
+      <ul class="tools"><li aria-label="Proprietary tools"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>Proprietary tools</small></li><li aria-label="Nintendo Switch / Switch 2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.176 24h3.674c3.376 0 6.15-2.774 6.15-6.15V6.15C24 2.775 21.226 0 17.85 0H14.1c-.074 0-.15.074-.15.15v23.7c-.001.076.075.15.226.15zm4.574-13.199c1.351 0 2.399 1.125 2.399 2.398 0 1.352-1.125 2.4-2.399 2.4-1.35 0-2.4-1.049-2.4-2.4-.075-1.349 1.05-2.398 2.4-2.398zM11.4 0H6.15C2.775 0 0 2.775 0 6.15v11.7C0 21.226 2.775 24 6.15 24h5.25c.074 0 .15-.074.15-.149V.15c.001-.076-.075-.15-.15-.15zM9.676 22.051H6.15c-2.326 0-4.201-1.875-4.201-4.201V6.15c0-2.326 1.875-4.201 4.201-4.201H9.6l.076 20.102zM3.75 7.199c0 1.275.975 2.25 2.25 2.25s2.25-.975 2.25-2.25c0-1.273-.975-2.25-2.25-2.25s-2.25.977-2.25 2.25z"/></svg><small>Nintendo Switch / Switch 2</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul>
+      <h2>ポケモンレジェンズ Z-A</h2>
+      <p class="meta">プランナー（ストーリーチーム） · 2023年10月〜2024年12月</p>
+      <p class="summary">ストーリーチームのプランナーとして、全サブクエストおよびメインストーリーの15〜20%のカメラワーク・カットシーン演出を担当。</p>
+      <span class="suit-big" aria-hidden="true">♥</span>
+    </article>
+    <article class="card suit-liveops" style="--o:0.0;--r:0.0deg;--y:0px;--z:4;--list:0" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-puzzle-panic" data-open="d-puzzle-panic">
+      <button type="button" class="drop" aria-label="戻す">×</button>
+      <div class="corner" aria-label="役割: リードゲームプランナー; 分野: ライブ運営"><b>LEAD</b><span>♦</span></div>
+      <div class="frame"><img src="../media/puzzle-panic-01.jpg" alt="『パズルパニック』公式iPhoneストアスクリーンショット 01" loading="lazy" class=on><img src="../media/puzzle-panic-02.jpg" alt="『パズルパニック』公式iPhoneストアスクリーンショット 02" loading="lazy"></div>
+      <ul class="tools"><li aria-label="HTML5"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 0h21l-1.91 21.563L11.977 24l-8.564-2.438L1.5 0zm7.031 9.75l-.232-2.718 10.059.003.23-2.622L5.412 4.41l.698 8.01h9.126l-.326 3.426-2.91.804-2.955-.81-.188-2.11H6.248l.33 4.171L12 19.351l5.379-1.443.744-8.157H8.531z"/></svg><small>HTML5</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li><li aria-label="Claude Code"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg><small>Claude Code</small></li><li class="more" aria-label="2 その他: Codex, Gemini"><span class="plate">+2</span><small>さらに</small></li></ul>
+      <h2>パズルパニック</h2>
+      <p class="meta">リードゲームプランナー · 2025年2月〜現在</p>
+      <p class="summary">運用型モバイル向けマッチ3パズルのリードプランナー。エピソードや期間限定イベント、新規障害物の設計、競合分析、HTML5によるプレイ可能なイベントプロトタイプ制作を担当。</p>
+      <span class="suit-big" aria-hidden="true">♦</span>
+    </article>
+    <article class="card suit-systems" style="--o:1.0;--r:4.0deg;--y:3px;--z:5;--list:3" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-shadowverse-champions-battle" data-open="d-shadowverse-champions-battle">
+      <button type="button" class="drop" aria-label="戻す">×</button>
+      <div class="corner" aria-label="役割: システムプランナー; 分野: システム"><b>SYS</b><span>♠</span></div>
+      <div class="frame"><img src="../media/shadowverse-01.jpg" alt="『シャドウバース チャンピオンズバトル』ゲームプレイ：教室での部活動シーン" loading="lazy" class=on><img src="../media/shadowverse-02.jpg" alt="『シャドウバース チャンピオンズバトル』ストーリーモードの会話シーン" loading="lazy"></div>
+      <ul class="tools"><li aria-label="Lua"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.38 10.377l-.272-.037c-.048.344-.082.695-.101 1.041l.275.016c.018-.34.051-.682.098-1.02zM4.136 3.289l-.184-.205c-.258.232-.509.48-.746.734l.202.188c.231-.248.476-.49.728-.717zM5.769 2.059l-.146-.235c-.296.186-.586.385-.863.594l.166.219c.27-.203.554-.399.843-.578zM1.824 18.369c.185.297.384.586.593.863l.22-.164c-.205-.271-.399-.555-.58-.844l-.233.145zM1.127 16.402l-.255.104c.129.318.274.635.431.943l.005.01.245-.125-.005-.01c-.153-.301-.295-.611-.421-.922zM.298 9.309l.269.063c.076-.332.168-.664.272-.986l-.261-.087c-.108.332-.202.672-.28 1.01zM.274 12.42l-.275.01c.012.348.04.699.083 1.043l.273-.033c-.042-.336-.069-.68-.081-1.02zM.256 14.506c.073.34.162.682.264 1.014l.263-.08c-.1-.326-.187-.658-.258-.99l-.269.056zM11.573.275L11.563 0c-.348.012-.699.039-1.044.082l.034.273c.338-.041.68-.068 1.02-.08zM23.221 8.566c.1.326.186.66.256.992l.27-.059c-.072-.34-.16-.682-.262-1.014l-.264.081zM17.621 1.389c-.309-.164-.627-.314-.947-.449l-.107.252c.314.133.625.281.926.439l.128-.242zM15.693.572c-.332-.105-.67-.199-1.01-.277l-.063.268c.332.076.664.168.988.273l.085-.264zM6.674 1.545c.298-.15.606-.291.916-.418L7.486.873c-.317.127-.632.272-.937.428l-.015.008.125.244.015-.008zM23.727 11.588l.275-.01a11.797 11.797 0 0 0-.082-1.045l-.273.033c.041.338.068.682.08 1.022zM13.654.105c-.346-.047-.696-.08-1.043-.098l-.014.273c.339.018.683.051 1.019.098l.038-.273zM9.544.527l-.058-.27c-.34.072-.681.16-1.014.264l.081.262c.325-.099.659-.185.991-.256zM1.921 5.469l.231.15c.185-.285.384-.566.592-.834l-.217-.17c-.213.276-.417.563-.606.854zM.943 7.318l.253.107c.132-.313.28-.625.439-.924l-.243-.128c-.163.307-.314.625-.449.945zM18.223 21.943l.145.234c.295-.186.586-.385.863-.594l-.164-.219c-.272.204-.557.4-.844.579zM21.248 19.219l.217.17c.215-.273.418-.561.607-.854l-.23-.148c-.186.285-.385.564-.594.832zM19.855 20.715l.184.203c.258-.23.51-.479.746-.732l-.201-.188c-.23.248-.477.488-.729.717zM22.359 17.504l.244.129c.162-.307.314-.625.449-.945l-.254-.107a11.27 11.27 0 0 1-.439.923zM23.617 13.629l.273.039c.049-.346.082-.695.102-1.043l-.275-.014c-.018.338-.051.682-.1 1.018zM23.156 15.621l.264.086c.107-.332.201-.67.279-1.01l-.268-.063c-.077.333-.169.665-.275.987zM22.453 6.672c.154.303.297.617.424.932l.256-.104c-.131-.322-.277-.643-.436-.953l-.244.125zM8.296 23.418c.331.107.67.201 1.009.279l.062-.268c-.331-.076-.663-.168-.986-.273l-.085.262zM10.335 23.889c.345.049.696.082 1.043.102l.014-.275c-.339-.018-.682-.051-1.019-.098l-.038.271zM17.326 22.449c-.303.154-.613.297-.926.424l.104.256c.318-.131.639-.275.947-.434l.004-.002-.123-.246-.006.002zM4.613 21.467c.274.213.562.418.854.605l.149-.23c-.285-.184-.565-.385-.833-.592l-.17.217zM12.417 23.725l.009.275c.348-.014.699-.041 1.045-.084l-.035-.271c-.336.041-.68.068-1.019.08zM6.37 22.604c.307.162.625.314.946.449l.107-.254c-.313-.133-.624-.279-.924-.439l-.129.244zM3.083 20.041c.233.258.48.51.734.746l.188-.201c-.249-.23-.49-.477-.717-.729l-.205.184zM14.445 23.475l.059.27c.34-.074.68-.162 1.014-.266l-.082-.262c-.325.099-.659.185-.991.258zM21.18.129A2.689 2.689 0 1 0 21.18 5.507 2.689 2.689 0 1 0 21.18.129zM15.324 15.447c0 .471.314.66.852.66.67 0 1.297-.396 1.297-1.016v-.645c-.23.107-.379.141-1.107.24-.735.109-1.042.306-1.042.761zM12 2.818c-5.07 0-9.18 4.109-9.18 9.18 0 5.068 4.11 9.18 9.18 9.18 5.07 0 9.18-4.111 9.18-9.18 0-5.07-4.11-9.18-9.18-9.18zm-2.487 13.77H5.771v-6.023h.769v5.346h2.974v.677zm4.13 0h-.619v-.67c-.405.57-.811.793-1.446.793-.843 0-1.38-.463-1.38-1.182v-3.271h.686v3c0 .52.347.85.893.85.719 0 1.181-.578 1.181-1.461v-2.389h.686v4.33zm-.53-8.393c0-1.484 1.205-2.689 2.689-2.689s2.688 1.205 2.688 2.689-1.203 2.688-2.688 2.688-2.689-1.203-2.689-2.688zm5.567 7.856v.52c-.223.059-.33.074-.471.074-.34 0-.637-.238-.711-.57-.381.406-.918.637-1.471.637-.877 0-1.422-.463-1.422-1.248 0-.527.256-.916.76-1.123.266-.107.414-.141 1.389-.264.545-.066.719-.191.719-.48v-.182c0-.412-.348-.645-.967-.645-.645 0-.957.24-1.016.77h-.693c.041-1 .686-1.404 1.734-1.404 1.066 0 1.627.412 1.627 1.182v2.412c0 .215.133.338.373.338.041-.002.074-.002.149-.017z"/></svg><small>Lua</small></li><li aria-label="Confluence"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.87 18.257c-.248.382-.53.875-.763 1.245a.764.764 0 0 0 .255 1.04l4.965 3.054a.764.764 0 0 0 1.058-.26c.199-.332.454-.763.733-1.221 1.967-3.247 3.945-2.853 7.508-1.146l4.957 2.337a.764.764 0 0 0 1.028-.382l2.364-5.346a.764.764 0 0 0-.382-1 599.851 599.851 0 0 1-4.965-2.361C10.911 10.97 5.224 11.185.87 18.257zM23.131 5.743c.249-.405.531-.875.764-1.25a.764.764 0 0 0-.256-1.034L18.675.404a.764.764 0 0 0-1.058.26c-.195.335-.451.763-.734 1.225-1.966 3.246-3.945 2.85-7.508 1.146L4.437.694a.764.764 0 0 0-1.027.382L1.046 6.422a.764.764 0 0 0 .382 1c1.039.49 3.105 1.467 4.965 2.361 6.698 3.246 12.392 3.029 16.738-4.04z"/></svg><small>Confluence</small></li><li aria-label="Nintendo Dev Interface"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>Nintendo Dev Interface</small></li><li aria-label="Visual Studio Code"><span class="plate" aria-hidden="true">VI</span><small>Visual Studio Code</small></li><li aria-label="SourceForge"><span class="plate" aria-hidden="true">SO</span><small>SourceForge</small></li><li class="more" aria-label="3 その他: Excel, Word, PowerPoint"><span class="plate">+3</span><small>さらに</small></li></ul>
+      <h2>シャドウバース チャンピオンズバトル</h2>
+      <p class="meta">システムプランナー · 2020年1月〜2020年5月</p>
+      <p class="summary">全メインクエスト・サブクエストの設計および実装。解放条件、NPC出現制御、昼夜分岐、報酬設定を担当。</p>
+      <span class="suit-big" aria-hidden="true">♠</span>
+    </article>
+    <article class="card suit-scene" style="--o:2.0;--r:8.0deg;--y:12px;--z:6;--list:4" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-bustafellows" data-open="d-bustafellows">
+      <button type="button" class="drop" aria-label="戻す">×</button>
+      <div class="corner" aria-label="役割: ゲームプランナー／演出担当; 分野: 演出・デザイン"><b>SCENE</b><span>♣</span></div>
+      <div class="frame"><img src="../media/bustafellows-01.jpg" alt="『BUSTAFELLOWS』ゲームプレイ：ネームプレートとテキストウィンドウが表示された会話シーン" loading="lazy" class=on><img src="../media/bustafellows-02.jpg" alt="『BUSTAFELLOWS』ゲームプレイ：ゲーム内のビデオ通話インターフェース" loading="lazy"></div>
+      <ul class="tools"><li aria-label="In-house script language"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>In-house script language</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul>
+      <h2>BUSTAFELLOWS</h2>
+      <p class="meta">ゲームプランナー／演出担当 · 2019年1月〜2019年2月</p>
+      <p class="summary">iOS／Android版『BUSTAFELLOWS』のシーン演出。ADVカットシーンおよび謎解きシーンの開発を担当。</p>
+      <span class="suit-big" aria-hidden="true">♣</span>
+    </article>
+    <article class="card suit-systems" style="--o:3.0;--r:12.0deg;--y:27px;--z:7;--list:7" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-shacho-battle" data-open="d-shacho-battle">
+      <button type="button" class="drop" aria-label="戻す">×</button>
+      <div class="corner" aria-label="役割: ゲームプランナー; 分野: システム"><b>PLAN</b><span>♠</span></div>
+      <div class="frame"><img src="../media/shacho-battle-01.jpg" alt="『社長、バトルの時間です！』Steam版ゲームプレイ：インフェルノマウンテンでのグリッドバトル" loading="lazy" class=on><img src="../media/shacho-battle-02.jpg" alt="『社長、バトルの時間です！』Steam版ゲームプレイ：ブレード荒野でのグリッドバトル" loading="lazy"></div>
+      <ul class="tools"><li aria-label="Google Sheets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.318 12.545H7.91v-1.909h3.41v1.91zM14.728 0v6h6l-6-6zm1.363 10.636h-3.41v1.91h3.41v-1.91zm0 3.273h-3.41v1.91h3.41v-1.91zM20.727 6.5v15.864c0 .904-.732 1.636-1.636 1.636H4.909a1.636 1.636 0 0 1-1.636-1.636V1.636C3.273.732 4.005 0 4.909 0h9.318v6.5h6.5zm-3.273 2.773H6.545v7.909h10.91v-7.91zm-6.136 4.636H7.91v1.91h3.41v-1.91z"/></svg><small>Google Sheets</small></li><li aria-label="Confluence"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.87 18.257c-.248.382-.53.875-.763 1.245a.764.764 0 0 0 .255 1.04l4.965 3.054a.764.764 0 0 0 1.058-.26c.199-.332.454-.763.733-1.221 1.967-3.247 3.945-2.853 7.508-1.146l4.957 2.337a.764.764 0 0 0 1.028-.382l2.364-5.346a.764.764 0 0 0-.382-1 599.851 599.851 0 0 1-4.965-2.361C10.911 10.97 5.224 11.185.87 18.257zM23.131 5.743c.249-.405.531-.875.764-1.25a.764.764 0 0 0-.256-1.034L18.675.404a.764.764 0 0 0-1.058.26c-.195.335-.451.763-.734 1.225-1.966 3.246-3.945 2.85-7.508 1.146L4.437.694a.764.764 0 0 0-1.027.382L1.046 6.422a.764.764 0 0 0 .382 1c1.039.49 3.105 1.467 4.965 2.361 6.698 3.246 12.392 3.029 16.738-4.04z"/></svg><small>Confluence</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul>
+      <h2>社長、バトルの時間です！</h2>
+      <p class="meta">ゲームプランナー · 2017年4月〜2017年12月、2019年</p>
+      <p class="summary">モバイルRPGにおける新機能の仕様書作成、マスターデータ作成、ステージテーマ企画、および機能・キャラクター・スキル・装備のバランス調整を担当。</p>
+      <span class="suit-big" aria-hidden="true">♠</span>
+    </article>
+    <article class="card suit-personal" style="--o:4.0;--r:16.0deg;--y:48px;--z:8;--list:8" tabindex="0" role="button" aria-haspopup="dialog" aria-controls="d-personal-lab" data-open="d-personal-lab">
+      <button type="button" class="drop" aria-label="戻す">×</button>
+      <div class="corner" aria-label="個人ラボ"><b>LAB</b><span>✦</span></div>
+      <div class="frame"><img src="../media/concept/coven-workshop-v1.jpg" alt="魔法工房のコンセプトアート" loading="lazy" class=on><img src="../media/concept/table-horror-night-v1.jpg" alt="D&amp;Dのゲームテーブルを囲む夜のホラーシーンのコンセプトアート" loading="lazy"></div>
+      <ul class="tools"><li aria-label="Godot"><span class="plate" aria-hidden="true">GO</span><small>Godot</small></li><li aria-label="Unity"><span class="plate" aria-hidden="true">UN</span><small>Unity</small></li><li aria-label="Ollama"><span class="plate" aria-hidden="true">OL</span><small>Ollama</small></li><li aria-label="Claude Code"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg><small>Claude Code</small></li></ul>
+      <h2>個人ラボ</h2>
+      <p class="meta">個人制作</p>
+      <p class="summary">コンセプトアート、AI支援によるゲームプロトタイプ制作、ローカルモデル、マルチエージェントオーケストレーションを実験しながら学ぶ場。</p>
+      <span class="suit-big" aria-hidden="true">✦</span>
+    </article>
+</main>
+<footer><section id="about" class="about" aria-labelledby="about-title"><img class="portrait portrait-site" src="../../media/profile/avatar-site.jpg" alt="白熊 龍空" width="160" height="160"><img class="portrait-print" src="../../media/profile/avatar-print.jpg" alt="白熊 龍空" width="450" height="600"><div><p class="eyebrow">プロフィール</p><h2 id="about-title">白熊 龍空</h2><p class="about-role">ゲームデザイナー／テクニカルデザイナー · 日本・東京</p><p>コンシューマ・モバイル・VRの3領域で9年の経験を持つゲームデザイナー。『ポケモンレジェンズ Z-A』『DYSCHRONIA: Chronos Alternate』にクレジット記載。現在はLimit Breakにて『パズルパニック』のリードゲームプランナーとして、新規メカニクスやイベントの設計、HTML5プロトタイプによる経営層への提案を担当。</p><p>企画・設計にとどまらず、Unity・Lua・社内スクリプト言語を用いたクエスト、シーン、開発ツールの実装まで自ら担当。</p><ul class="about-list"><li>ロシア語 — ネイティブ</li><li>日本語 — ビジネス</li><li>英語 — ビジネス</li></ul><ul class="about-list"><li><a href="https://www.linkedin.com/in/riku-shirokuma-204280117">LinkedIn ↗</a></li><li><a href="https://www.mobygames.com/game/249085/pokemon-legends-z-a/credits/switch/">Pokémon Legends Z-A credits ↗</a></li><li><a href="https://dyschroniaca.com/en/staffcast/staff.html">DYSCHRONIA staff ↗</a></li></ul></div></section></footer>
+
+    <dialog id="d-puzzle-panic" class="case suit-liveops" aria-labelledby="t-puzzle-panic">
+      <form method="dialog"><button class="close" aria-label="閉じる">×</button></form>
+      <p class="eyebrow">♦ ライブ運営</p>
+      <h2 id="t-puzzle-panic">パズルパニック</h2>
+      <img src="../media/puzzle-panic.gif" alt="『パズルパニック』公式ゲームプレイアニメーションプレビュー" loading="lazy">
+      <p class="credit">© 2026 Limit Break Inc.</p>
+      <div class="shots"><figure><img src="../media/puzzle-panic-01.jpg" alt="『パズルパニック』公式iPhoneストアスクリーンショット 01" loading="lazy"><figcaption>© 2026 Limit Break Inc.</figcaption></figure><figure><img src="../media/puzzle-panic-02.jpg" alt="『パズルパニック』公式iPhoneストアスクリーンショット 02" loading="lazy"><figcaption>© 2026 Limit Break Inc.</figcaption></figure></div>
+      <dl>
+        <dt>役割</dt><dd>リードゲームプランナー</dd>
+        <dt>チーム</dt><dd>約70名</dd>
+        <dt>期間</dt><dd>2025年2月〜現在</dd>
+        <dt>エンジン</dt><dd>Unity、HTML5（プロトタイプ制作）、Google スプレッドシート</dd>
+      </dl>
+      <section aria-label="ツール"><ul class="tools"><li aria-label="HTML5"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 0h21l-1.91 21.563L11.977 24l-8.564-2.438L1.5 0zm7.031 9.75l-.232-2.718 10.059.003.23-2.622L5.412 4.41l.698 8.01h9.126l-.326 3.426-2.91.804-2.955-.81-.188-2.11H6.248l.33 4.171L12 19.351l5.379-1.443.744-8.157H8.531z"/></svg><small>HTML5</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li><li aria-label="Claude Code"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg><small>Claude Code</small></li><li class="more" aria-label="2 その他: Codex, Gemini"><span class="plate">+2</span><small>さらに</small></li></ul></section>
+      <h3>課題</h3><p>約70名体制でエピソードと期間限定イベントを継続的に配信する運用型マッチ3パズル。すべての新規メカニクスにおいて、仕様書の作成、動作するプロトタイプの制作、経営層へのプレゼンテーションを行った上で、既存のパズルバランスを崩さずにUnityビルドへ統合する必要があった。</p>
+      <h3>担当業務</h3><ul><li>エピソードおよび期間限定イベントの仕様書（GDD）作成（新規メカニクスの設計を含む）</li><li>新規パズル・障害物の設計、既存パズルのバランス調整</li><li>競合タイトルの分析と、実際に機能しているメカニクスの調査</li><li>HTML5によるイベントのプロトタイプ制作および経営層へのプレゼンテーション</li><li>Unityにおけるアセット統合、シーン制作、アニメーション実装、トリガー検証、デバッグ、定型作業の自動化</li><li>UIチームの進行調整、プロデューサー補佐としてのUA（ユーザー獲得）チームおよびセールスアートチームとの調整</li><li>日本語・英語・ロシア語の3言語による全会議の通訳、テキストの英日／日英翻訳、ロシア語ローカライズ</li></ul>
+      <h3>成果</h3><p>すべてのイベントを書類ではなくプレイ可能なHTML5プロトタイプとして経営層へ提案。2025年2月より運用を継続中（Android版は開発済み・未リリース）。</p>
+    </dialog>
+    <dialog id="d-pokemon-legends-z-a" class="case suit-story" aria-labelledby="t-pokemon-legends-z-a">
+      <form method="dialog"><button class="close" aria-label="閉じる">×</button></form>
+      <p class="eyebrow">♥ ストーリー</p>
+      <h2 id="t-pokemon-legends-z-a">ポケモンレジェンズ Z-A</h2>
+      <img src="../media/pokemon.gif" alt="『ポケモンレジェンズ Z-A』ゲームプレイ：ミアレシティでのポカブとホルビーのバトル、「ひのこ」が命中するシーン" loading="lazy">
+      <p class="credit">©2025 Pokémon. © 1995-2025 Nintendo / Creatures Inc. / GAME FREAK inc.</p>
+      <div class="shots"><figure><img src="../media/pokemon-01.jpg" alt="『ポケモンレジェンズ Z-A』プロモーションスクリーンショット P02_02" loading="lazy"><figcaption>©2025 Pokémon. © 1995-2025 Nintendo / Creatures Inc. / GAME FREAK inc.</figcaption></figure><figure><img src="../media/pokemon-02.jpg" alt="『ポケモンレジェンズ Z-A』プロモーションスクリーンショット P02_04" loading="lazy"><figcaption>©2025 Pokémon. © 1995-2025 Nintendo / Creatures Inc. / GAME FREAK inc.</figcaption></figure><figure><img src="../media/pokemon-03.jpg" alt="『ポケモンレジェンズ Z-A』ゲームプレイ：技コマンドが表示されたフィールドバトルのHUD" loading="lazy"><figcaption>©2025 Pokémon. © 1995-2025 Nintendo / Creatures Inc. / GAME FREAK inc.</figcaption></figure></div>
+      <dl>
+        <dt>役割</dt><dd>プランナー（ストーリーチーム）</dd>
+        <dt>チーム</dt><dd>ストーリーチーム：10名（エンドクレジット記載：925名）</dd>
+        <dt>期間</dt><dd>2023年10月〜2024年12月</dd>
+        <dt>エンジン</dt><dd>社内3Dエンジン、Nintendo Switch／Switch 2 SDK</dd>
+      </dl>
+      <section aria-label="ツール"><ul class="tools"><li aria-label="Proprietary tools"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>Proprietary tools</small></li><li aria-label="Nintendo Switch / Switch 2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.176 24h3.674c3.376 0 6.15-2.774 6.15-6.15V6.15C24 2.775 21.226 0 17.85 0H14.1c-.074 0-.15.074-.15.15v23.7c-.001.076.075.15.226.15zm4.574-13.199c1.351 0 2.399 1.125 2.399 2.398 0 1.352-1.125 2.4-2.399 2.4-1.35 0-2.4-1.049-2.4-2.4-.075-1.349 1.05-2.398 2.4-2.398zM11.4 0H6.15C2.775 0 0 2.775 0 6.15v11.7C0 21.226 2.775 24 6.15 24h5.25c.074 0 .15-.074.15-.149V.15c.001-.076-.075-.15-.15-.15zM9.676 22.051H6.15c-2.326 0-4.201-1.875-4.201-4.201V6.15c0-2.326 1.875-4.201 4.201-4.201H9.6l.076 20.102zM3.75 7.199c0 1.275.975 2.25 2.25 2.25s2.25-.975 2.25-2.25c0-1.273-.975-2.25-2.25-2.25s-2.25.977-2.25 2.25z"/></svg><small>Nintendo Switch / Switch 2</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul></section>
+      <h3>課題</h3><p>プロジェクト要員30名以上、Planning Section内のストーリーチーム10名による大規模RPG開発。ゲーム全体の演出方針との一貫性を保ちながら、すべてのサブクエストに固有のカメラワークと演出を付ける必要があった。</p>
+      <h3>担当業務</h3><ul><li>ゲーム内の全サブクエストのカメラワークおよびカットシーン演出を制作</li><li>メインストーリーの15〜20%のカメラワークおよびカットシーン演出を制作</li><li>サブクエストの初期アイデア出しから実装までの制作に参加</li><li>ゲームワールド内におけるNPCおよびポケモンの配置設計</li><li>社内ツールおよびNintendo Switch／Switch 2実機を用いた実装・試験</li></ul>
+      <h3>成果</h3><p>Planning Section ストーリーチームとしてエンドクレジット（全925名）に記名記載。</p>
+    </dialog>
+    <dialog id="d-dyschronia" class="case suit-scene" aria-labelledby="t-dyschronia">
+      <form method="dialog"><button class="close" aria-label="閉じる">×</button></form>
+      <p class="eyebrow">♣ 演出・デザイン</p>
+      <h2 id="t-dyschronia">DYSCHRONIA: Chronos Alternate</h2>
+      <img src="../media/dyschronia.gif" alt="『DYSCHRONIA: Chronos Alternate』公式ローンチトレーラーアニメーション" loading="lazy">
+      <p class="credit">©Project DYSCHRONIA. Trailer: PlayStation / MyDearest.</p>
+      <div class="shots"><figure><img src="../media/dyschronia-01.jpg" alt="『DYSCHRONIA: Chronos Alternate』メモリーダイブのゲームプレイスクリーンショット" loading="lazy"><figcaption>©Project DYSCHRONIA.</figcaption></figure><figure><img src="../media/dyschronia-02.jpg" alt="『DYSCHRONIA: Chronos Alternate』パズルパートのゲームプレイスクリーンショット" loading="lazy"><figcaption>©Project DYSCHRONIA.</figcaption></figure></div>
+      <dl>
+        <dt>役割</dt><dd>ゲームデザイナー</dd>
+        <dt>チーム</dt><dd>開発チーム：約26名</dd>
+        <dt>期間</dt><dd>2022年4月〜2023年3月</dd>
+        <dt>エンジン</dt><dd>Unity／VR</dd>
+      </dl>
+      <section aria-label="ツール"><ul class="tools"><li aria-label="In-house script engine"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>In-house script engine</small></li><li aria-label="Google Sheets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.318 12.545H7.91v-1.909h3.41v1.91zM14.728 0v6h6l-6-6zm1.363 10.636h-3.41v1.91h3.41v-1.91zm0 3.273h-3.41v1.91h3.41v-1.91zM20.727 6.5v15.864c0 .904-.732 1.636-1.636 1.636H4.909a1.636 1.636 0 0 1-1.636-1.636V1.636C3.273.732 4.005 0 4.909 0h9.318v6.5h6.5zm-3.273 2.773H6.545v7.909h10.91v-7.91zm-6.136 4.636H7.91v1.91h3.41v-1.91z"/></svg><small>Google Sheets</small></li><li aria-label="Confluence"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.87 18.257c-.248.382-.53.875-.763 1.245a.764.764 0 0 0 .255 1.04l4.965 3.054a.764.764 0 0 0 1.058-.26c.199-.332.454-.763.733-1.221 1.967-3.247 3.945-2.853 7.508-1.146l4.957 2.337a.764.764 0 0 0 1.028-.382l2.364-5.346a.764.764 0 0 0-.382-1 599.851 599.851 0 0 1-4.965-2.361C10.911 10.97 5.224 11.185.87 18.257zM23.131 5.743c.249-.405.531-.875.764-1.25a.764.764 0 0 0-.256-1.034L18.675.404a.764.764 0 0 0-1.058.26c-.195.335-.451.763-.734 1.225-1.966 3.246-3.945 2.85-7.508 1.146L4.437.694a.764.764 0 0 0-1.027.382L1.046 6.422a.764.764 0 0 0 .382 1c1.039.49 3.105 1.467 4.965 2.361 6.698 3.246 12.392 3.029 16.738-4.04z"/></svg><small>Confluence</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul></section>
+      <h3>課題</h3><p>VRではプレイヤーが自由に視線を動かせるため、シーン構築とカットシーン演出そのもので物語を成立させる必要がある。約26名の開発体制のもと、ステルス要素、パズル、プロップ、ストーリー演出を一貫してまとめる必要があった。</p>
+      <h3>担当業務</h3><ul><li>VR向け3D ADVカットシーン開発</li><li>Unityシーンのプロップ管理</li><li>NPCのインタラクションおよびアチーブメント提案</li><li>カットシーン演出のクオリティ管理</li><li>ステルス要素およびパズルのバランス調整</li><li>英語スクリプト修正およびビルドのデバッグ</li><li>開発ツール改善の提案</li></ul>
+      <h3>成果</h3><p>公式サイトのスタッフ欄にゲームデザイナーとして記載。</p>
+    </dialog>
+    <dialog id="d-shadowverse-champions-battle" class="case suit-systems" aria-labelledby="t-shadowverse-champions-battle">
+      <form method="dialog"><button class="close" aria-label="閉じる">×</button></form>
+      <p class="eyebrow">♠ システム</p>
+      <h2 id="t-shadowverse-champions-battle">シャドウバース チャンピオンズバトル</h2>
+      <img src="../media/shadowverse.gif" alt="『シャドウバース チャンピオンズバトル』ゲームプレイ：クエスト目標とミニマップが表示された街の探索シーン" loading="lazy">
+      <p class="credit">© Cygames, Inc. / trailer XSEEDgames</p>
+      <div class="shots"><figure><img src="../media/shadowverse-01.jpg" alt="『シャドウバース チャンピオンズバトル』ゲームプレイ：教室での部活動シーン" loading="lazy"><figcaption>© Cygames, Inc. / trailer XSEEDgames</figcaption></figure><figure><img src="../media/shadowverse-02.jpg" alt="『シャドウバース チャンピオンズバトル』ストーリーモードの会話シーン" loading="lazy"><figcaption>© Cygames, Inc. / © アニメ「シャドウバース」製作委員会・テレビ東京</figcaption></figure></div>
+      <dl>
+        <dt>役割</dt><dd>システムプランナー</dd>
+        <dt>チーム</dt><dd>約70名</dd>
+        <dt>期間</dt><dd>2020年1月〜2020年5月</dd>
+        <dt>エンジン</dt><dd>Unity／Cygames社内エンジン（正確なエンジン名は未確認）</dd>
+      </dl>
+      <section aria-label="ツール"><ul class="tools"><li aria-label="Lua"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.38 10.377l-.272-.037c-.048.344-.082.695-.101 1.041l.275.016c.018-.34.051-.682.098-1.02zM4.136 3.289l-.184-.205c-.258.232-.509.48-.746.734l.202.188c.231-.248.476-.49.728-.717zM5.769 2.059l-.146-.235c-.296.186-.586.385-.863.594l.166.219c.27-.203.554-.399.843-.578zM1.824 18.369c.185.297.384.586.593.863l.22-.164c-.205-.271-.399-.555-.58-.844l-.233.145zM1.127 16.402l-.255.104c.129.318.274.635.431.943l.005.01.245-.125-.005-.01c-.153-.301-.295-.611-.421-.922zM.298 9.309l.269.063c.076-.332.168-.664.272-.986l-.261-.087c-.108.332-.202.672-.28 1.01zM.274 12.42l-.275.01c.012.348.04.699.083 1.043l.273-.033c-.042-.336-.069-.68-.081-1.02zM.256 14.506c.073.34.162.682.264 1.014l.263-.08c-.1-.326-.187-.658-.258-.99l-.269.056zM11.573.275L11.563 0c-.348.012-.699.039-1.044.082l.034.273c.338-.041.68-.068 1.02-.08zM23.221 8.566c.1.326.186.66.256.992l.27-.059c-.072-.34-.16-.682-.262-1.014l-.264.081zM17.621 1.389c-.309-.164-.627-.314-.947-.449l-.107.252c.314.133.625.281.926.439l.128-.242zM15.693.572c-.332-.105-.67-.199-1.01-.277l-.063.268c.332.076.664.168.988.273l.085-.264zM6.674 1.545c.298-.15.606-.291.916-.418L7.486.873c-.317.127-.632.272-.937.428l-.015.008.125.244.015-.008zM23.727 11.588l.275-.01a11.797 11.797 0 0 0-.082-1.045l-.273.033c.041.338.068.682.08 1.022zM13.654.105c-.346-.047-.696-.08-1.043-.098l-.014.273c.339.018.683.051 1.019.098l.038-.273zM9.544.527l-.058-.27c-.34.072-.681.16-1.014.264l.081.262c.325-.099.659-.185.991-.256zM1.921 5.469l.231.15c.185-.285.384-.566.592-.834l-.217-.17c-.213.276-.417.563-.606.854zM.943 7.318l.253.107c.132-.313.28-.625.439-.924l-.243-.128c-.163.307-.314.625-.449.945zM18.223 21.943l.145.234c.295-.186.586-.385.863-.594l-.164-.219c-.272.204-.557.4-.844.579zM21.248 19.219l.217.17c.215-.273.418-.561.607-.854l-.23-.148c-.186.285-.385.564-.594.832zM19.855 20.715l.184.203c.258-.23.51-.479.746-.732l-.201-.188c-.23.248-.477.488-.729.717zM22.359 17.504l.244.129c.162-.307.314-.625.449-.945l-.254-.107a11.27 11.27 0 0 1-.439.923zM23.617 13.629l.273.039c.049-.346.082-.695.102-1.043l-.275-.014c-.018.338-.051.682-.1 1.018zM23.156 15.621l.264.086c.107-.332.201-.67.279-1.01l-.268-.063c-.077.333-.169.665-.275.987zM22.453 6.672c.154.303.297.617.424.932l.256-.104c-.131-.322-.277-.643-.436-.953l-.244.125zM8.296 23.418c.331.107.67.201 1.009.279l.062-.268c-.331-.076-.663-.168-.986-.273l-.085.262zM10.335 23.889c.345.049.696.082 1.043.102l.014-.275c-.339-.018-.682-.051-1.019-.098l-.038.271zM17.326 22.449c-.303.154-.613.297-.926.424l.104.256c.318-.131.639-.275.947-.434l.004-.002-.123-.246-.006.002zM4.613 21.467c.274.213.562.418.854.605l.149-.23c-.285-.184-.565-.385-.833-.592l-.17.217zM12.417 23.725l.009.275c.348-.014.699-.041 1.045-.084l-.035-.271c-.336.041-.68.068-1.019.08zM6.37 22.604c.307.162.625.314.946.449l.107-.254c-.313-.133-.624-.279-.924-.439l-.129.244zM3.083 20.041c.233.258.48.51.734.746l.188-.201c-.249-.23-.49-.477-.717-.729l-.205.184zM14.445 23.475l.059.27c.34-.074.68-.162 1.014-.266l-.082-.262c-.325.099-.659.185-.991.258zM21.18.129A2.689 2.689 0 1 0 21.18 5.507 2.689 2.689 0 1 0 21.18.129zM15.324 15.447c0 .471.314.66.852.66.67 0 1.297-.396 1.297-1.016v-.645c-.23.107-.379.141-1.107.24-.735.109-1.042.306-1.042.761zM12 2.818c-5.07 0-9.18 4.109-9.18 9.18 0 5.068 4.11 9.18 9.18 9.18 5.07 0 9.18-4.111 9.18-9.18 0-5.07-4.11-9.18-9.18-9.18zm-2.487 13.77H5.771v-6.023h.769v5.346h2.974v.677zm4.13 0h-.619v-.67c-.405.57-.811.793-1.446.793-.843 0-1.38-.463-1.38-1.182v-3.271h.686v3c0 .52.347.85.893.85.719 0 1.181-.578 1.181-1.461v-2.389h.686v4.33zm-.53-8.393c0-1.484 1.205-2.689 2.689-2.689s2.688 1.205 2.688 2.689-1.203 2.688-2.688 2.688-2.689-1.203-2.689-2.688zm5.567 7.856v.52c-.223.059-.33.074-.471.074-.34 0-.637-.238-.711-.57-.381.406-.918.637-1.471.637-.877 0-1.422-.463-1.422-1.248 0-.527.256-.916.76-1.123.266-.107.414-.141 1.389-.264.545-.066.719-.191.719-.48v-.182c0-.412-.348-.645-.967-.645-.645 0-.957.24-1.016.77h-.693c.041-1 .686-1.404 1.734-1.404 1.066 0 1.627.412 1.627 1.182v2.412c0 .215.133.338.373.338.041-.002.074-.002.149-.017z"/></svg><small>Lua</small></li><li aria-label="Confluence"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.87 18.257c-.248.382-.53.875-.763 1.245a.764.764 0 0 0 .255 1.04l4.965 3.054a.764.764 0 0 0 1.058-.26c.199-.332.454-.763.733-1.221 1.967-3.247 3.945-2.853 7.508-1.146l4.957 2.337a.764.764 0 0 0 1.028-.382l2.364-5.346a.764.764 0 0 0-.382-1 599.851 599.851 0 0 1-4.965-2.361C10.911 10.97 5.224 11.185.87 18.257zM23.131 5.743c.249-.405.531-.875.764-1.25a.764.764 0 0 0-.256-1.034L18.675.404a.764.764 0 0 0-1.058.26c-.195.335-.451.763-.734 1.225-1.966 3.246-3.945 2.85-7.508 1.146L4.437.694a.764.764 0 0 0-1.027.382L1.046 6.422a.764.764 0 0 0 .382 1c1.039.49 3.105 1.467 4.965 2.361 6.698 3.246 12.392 3.029 16.738-4.04z"/></svg><small>Confluence</small></li><li aria-label="Nintendo Dev Interface"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>Nintendo Dev Interface</small></li><li aria-label="Visual Studio Code"><span class="plate" aria-hidden="true">VI</span><small>Visual Studio Code</small></li><li aria-label="SourceForge"><span class="plate" aria-hidden="true">SO</span><small>SourceForge</small></li><li class="more" aria-label="3 その他: Excel, Word, PowerPoint"><span class="plate">+3</span><small>さらに</small></li></ul></section>
+      <h3>課題</h3><p>プレイヤーがどの順序で進行しても全クエストが完遂可能であるよう、解放条件、完了後のNPC出現制御、昼夜分岐、報酬設定を一つの依存関係グラフとして構築する必要があった。あわせて各クエストの3Dカットシーン演出と品質確認も求められた。</p>
+      <h3>担当業務</h3><ul><li>全メインクエスト・サブクエストの設計と実装</li><li>解放条件、完了後のNPC出現制御、昼夜分岐、報酬設定を含むクエストロジックの構築</li><li>クエストグラフ全体で全クエストが完遂可能な状態を担保</li><li>ゲーム内時間に応じたNPCの配置と出現条件管理</li><li>3D ADVカットシーン開発および演出クオリティ管理</li><li>クエストロジックおよびカットシーンのデバッグ</li></ul>
+      <h3>成果</h3><p>Nintendo Switch向けタイトルのクエストシステムを設計から実装まで一貫して担当し、カットシーン演出も手がけた。</p>
+    </dialog>
+    <dialog id="d-bustafellows" class="case suit-scene" aria-labelledby="t-bustafellows">
+      <form method="dialog"><button class="close" aria-label="閉じる">×</button></form>
+      <p class="eyebrow">♣ 演出・デザイン</p>
+      <h2 id="t-bustafellows">BUSTAFELLOWS</h2>
+      <img src="../media/bustafellows.gif" alt="『BUSTAFELLOWS』ゲームプレイ：スケアクロウとの会話における選択肢シーン" loading="lazy">
+      <p class="credit">© NIPPON CULTURAL BROADCASTING EXTEND INC.</p>
+      <div class="shots"><figure><img src="../media/bustafellows-01.jpg" alt="『BUSTAFELLOWS』ゲームプレイ：ネームプレートとテキストウィンドウが表示された会話シーン" loading="lazy"><figcaption>© NIPPON CULTURAL BROADCASTING EXTEND INC.</figcaption></figure><figure><img src="../media/bustafellows-02.jpg" alt="『BUSTAFELLOWS』ゲームプレイ：ゲーム内のビデオ通話インターフェース" loading="lazy"><figcaption>© NIPPON CULTURAL BROADCASTING EXTEND INC.</figcaption></figure></div>
+      <dl>
+        <dt>役割</dt><dd>ゲームプランナー／演出担当</dd>
+        <dt>チーム</dt><dd>非公開</dd>
+        <dt>期間</dt><dd>2019年1月〜2019年2月</dd>
+        <dt>エンジン</dt><dd>Unity、社内ツール</dd>
+      </dl>
+      <section aria-label="ツール"><ul class="tools"><li aria-label="In-house script language"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>In-house script language</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul></section>
+      <h3>課題</h3><p>謎解きシーンとADVカットシーンが読後感を左右するため、的確な演出付けが求められた。5名体制のチームで、設計・実装・試験・運用までを一貫して担当。</p>
+      <h3>担当業務</h3><ul><li>モバイル版の演出担当としてストーリーパートのシーン演出を制作</li><li>謎解きシーン開発</li><li>Unityおよび社内スクリプト言語を用いたADVカットシーン開発</li><li>設計・実装・試験・運用までシーン演出を一貫して担当</li></ul>
+      <h3>成果</h3><p>iOS／Android版のシーン演出を設計から実装・試験・運用まで完遂。</p>
+    </dialog>
+    <dialog id="d-yuyuyui" class="case suit-liveops" aria-labelledby="t-yuyuyui">
+      <form method="dialog"><button class="close" aria-label="閉じる">×</button></form>
+      <p class="eyebrow">♦ ライブ運営</p>
+      <h2 id="t-yuyuyui">結城友奈は勇者である 花結いのきらめき</h2>
+      <img src="../media/yuyuyui.gif" alt="『結城友奈は勇者である 花結いのきらめき』公式PVゲームプレイアニメーション" loading="lazy">
+      <p class="credit">(C)2017 Project 2H (C)KADOKAWA CORPORATION 2017</p>
+      <div class="shots"><figure><img src="../media/yuyuyui-01.jpg" alt="『結城友奈は勇者である 花結いのきらめき』公式ゲーム画面" loading="lazy"><figcaption>(C)2017 Project 2H (C)KADOKAWA CORPORATION 2017</figcaption></figure><figure><img src="../media/yuyuyui-02.jpg" alt="『結城友奈は勇者である 花結いのきらめき』公式イベント画面" loading="lazy"><figcaption>(C)2017 Project 2H (C)KADOKAWA CORPORATION 2017</figcaption></figure></div>
+      <dl>
+        <dt>役割</dt><dd>ゲームプランナー／スクリプトプランナー</dd>
+        <dt>チーム</dt><dd>モバイル運用チーム</dd>
+        <dt>期間</dt><dd>2019年〜2023年</dd>
+        <dt>エンジン</dt><dd>Unity、社内スクリプトシステム</dd>
+      </dl>
+      <section aria-label="ツール"><ul class="tools"><li aria-label="In-house script language"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>In-house script language</small></li><li aria-label="Google Sheets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.318 12.545H7.91v-1.909h3.41v1.91zM14.728 0v6h6l-6-6zm1.363 10.636h-3.41v1.91h3.41v-1.91zm0 3.273h-3.41v1.91h3.41v-1.91zM20.727 6.5v15.864c0 .904-.732 1.636-1.636 1.636H4.909a1.636 1.636 0 0 1-1.636-1.636V1.636C3.273.732 4.005 0 4.909 0h9.318v6.5h6.5zm-3.273 2.773H6.545v7.909h10.91v-7.91zm-6.136 4.636H7.91v1.91h3.41v-1.91z"/></svg><small>Google Sheets</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul></section>
+      <h3>課題</h3><p>2019年10月から2023年9月にかけて3期間にわたり参画した運用型モバイルタイトル。各期間3名体制で、継続的に配信されるイベントとADVカットシーンのスケジュール管理およびクオリティ管理を行う必要があった。</p>
+      <h3>担当業務</h3><ul><li>運用スケジュールに沿ったストーリーイベント向けADVカットシーン開発</li><li>演出クオリティ管理</li><li>Google スプレッドシートを用いたイベントとADV演出のスケジュール管理</li><li>Unityおよび社内スクリプト言語によるシーン構築</li><li>サービス終了まで運用フェーズをサポート</li></ul>
+      <h3>成果</h3><p>2019年10月から2023年9月までの3期間にわたり、カットシーン開発、演出クオリティ管理、イベントスケジュール管理を遂行。</p>
+    </dialog>
+    <dialog id="d-shinen-resist" class="case suit-story" aria-labelledby="t-shinen-resist">
+      <form method="dialog"><button class="close" aria-label="閉じる">×</button></form>
+      <p class="eyebrow">♥ ストーリー</p>
+      <h2 id="t-shinen-resist">シンエンレジスト</h2>
+      <img src="../media/shinen-resist.gif" alt="『シンエンレジスト』公式オープニングアニメーション" loading="lazy">
+      <p class="credit">(C)2018 集英社</p>
+      <div class="shots"><figure><img src="../media/shinen-resist-01.jpg" alt="『シンエンレジスト』公式ADVストーリーシーンのスクリーンショット" loading="lazy"><figcaption>(C)2018 集英社</figcaption></figure><figure><img src="../media/shinen-resist-02.jpg" alt="『シンエンレジスト』公式ADV会話シーンのスクリーンショット" loading="lazy"><figcaption>(C)2018 集英社</figcaption></figure></div>
+      <dl>
+        <dt>役割</dt><dd>スクリプトリーダー</dd>
+        <dt>チーム</dt><dd>5名（スクリプター4名をディレクション）</dd>
+        <dt>期間</dt><dd>2017年12月〜2019年1月</dd>
+        <dt>エンジン</dt><dd>Unity、社内スクリプトエンジン</dd>
+      </dl>
+      <section aria-label="ツール"><ul class="tools"><li aria-label="In-house script language"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg><small>In-house script language</small></li><li aria-label="SharePoint"><span class="plate" aria-hidden="true">SH</span><small>SharePoint</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul></section>
+      <h3>課題</h3><p>運用型モバイルRPGのシーン演出において、2018年3月より実制作と並行してスクリプター4名のディレクションおよびスクリプトエンジンの新規機能企画を担当。定例会で進捗を報告するため、スケジュールの厳守が求められた。</p>
+      <h3>担当業務</h3><ul><li>設計・実装・運用を通じたシーン演出のディレクション</li><li>2018年3月よりスクリプトリーダーとしてスクリプター4名をディレクション</li><li>スクリプトエンジンの新規機能の企画</li><li>チームメンバーのスケジュール管理</li><li>演出クオリティ管理</li><li>PowerPointおよびWordで資料を作成し、定例会にて進捗をプレゼンテーション</li></ul>
+      <h3>成果</h3><p>2017年12月から2019年1月までシーン演出を担当し、2018年3月よりスクリプトリーダーとしてスクリプター4名をディレクション。</p>
+    </dialog>
+    <dialog id="d-shacho-battle" class="case suit-systems" aria-labelledby="t-shacho-battle">
+      <form method="dialog"><button class="close" aria-label="閉じる">×</button></form>
+      <p class="eyebrow">♠ システム</p>
+      <h2 id="t-shacho-battle">社長、バトルの時間です！</h2>
+      <img src="../media/shacho-battle.gif" alt="『社長、バトルの時間です！』モバイル版ゲームプレイ：敵のスキルがパーティに命中するシーン" loading="lazy">
+      <p class="credit">©KADOKAWA CORPORATION 2019 ©でらゲー ©PREAPP PARTNERS</p>
+      <div class="shots"><figure><img src="../media/shacho-battle-01.jpg" alt="『社長、バトルの時間です！』Steam版ゲームプレイ：インフェルノマウンテンでのグリッドバトル" loading="lazy"><figcaption>©KADOKAWA CORPORATION 2021 ©PREAPP PARTNERS</figcaption></figure><figure><img src="../media/shacho-battle-02.jpg" alt="『社長、バトルの時間です！』Steam版ゲームプレイ：ブレード荒野でのグリッドバトル" loading="lazy"><figcaption>©KADOKAWA CORPORATION 2021 ©PREAPP PARTNERS</figcaption></figure></div>
+      <dl>
+        <dt>役割</dt><dd>ゲームプランナー</dd>
+        <dt>チーム</dt><dd>4名</dd>
+        <dt>期間</dt><dd>2017年4月〜2017年12月、2019年</dd>
+        <dt>エンジン</dt><dd>Unity、Excel、Google スプレッドシート、Confluence</dd>
+      </dl>
+      <section aria-label="ツール"><ul class="tools"><li aria-label="Google Sheets"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.318 12.545H7.91v-1.909h3.41v1.91zM14.728 0v6h6l-6-6zm1.363 10.636h-3.41v1.91h3.41v-1.91zm0 3.273h-3.41v1.91h3.41v-1.91zM20.727 6.5v15.864c0 .904-.732 1.636-1.636 1.636H4.909a1.636 1.636 0 0 1-1.636-1.636V1.636C3.273.732 4.005 0 4.909 0h9.318v6.5h6.5zm-3.273 2.773H6.545v7.909h10.91v-7.91zm-6.136 4.636H7.91v1.91h3.41v-1.91z"/></svg><small>Google Sheets</small></li><li aria-label="Confluence"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M.87 18.257c-.248.382-.53.875-.763 1.245a.764.764 0 0 0 .255 1.04l4.965 3.054a.764.764 0 0 0 1.058-.26c.199-.332.454-.763.733-1.221 1.967-3.247 3.945-2.853 7.508-1.146l4.957 2.337a.764.764 0 0 0 1.028-.382l2.364-5.346a.764.764 0 0 0-.382-1 599.851 599.851 0 0 1-4.965-2.361C10.911 10.97 5.224 11.185.87 18.257zM23.131 5.743c.249-.405.531-.875.764-1.25a.764.764 0 0 0-.256-1.034L18.675.404a.764.764 0 0 0-1.058.26c-.195.335-.451.763-.734 1.225-1.966 3.246-3.945 2.85-7.508 1.146L4.437.694a.764.764 0 0 0-1.027.382L1.046 6.422a.764.764 0 0 0 .382 1c1.039.49 3.105 1.467 4.965 2.361 6.698 3.246 12.392 3.029 16.738-4.04z"/></svg><small>Confluence</small></li><li aria-label="Excel"><span class="plate" aria-hidden="true">EX</span><small>Excel</small></li><li aria-label="Word"><span class="plate" aria-hidden="true">WO</span><small>Word</small></li><li aria-label="PowerPoint"><span class="plate" aria-hidden="true">PO</span><small>PowerPoint</small></li></ul></section>
+      <h3>課題</h3><p>同一のモバイルRPGに2期間にわたり参画し、2017年は新機能設計、2019年はステージおよびバトル設計を担当。両期間を通じて仕様策定、マスターデータ作成、バランス調整を一人で一貫して手がけた。</p>
+      <h3>担当業務</h3><ul><li>新機能の仕様書（概要・詳細）作成</li><li>キャラクターおよびイベントのマスターデータ作成</li><li>ADVパートスクリプト作成および演出付け</li><li>演出アニメーション案作成</li><li>新機能、キャラクターデータ、イベントデータのバランス調整</li><li>ステージテーマの企画と、テーマに合わせたエネミーのパラメータ調整・配置</li><li>スキルや装備のバランス調整</li><li>チームのスケジュール管理およびビルドのデバッグ</li></ul>
+      <h3>成果</h3><p>2017年と2019年の2期間にわたり、同タイトルの新機能仕様書、マスターデータ、バトルバランス調整を担当。</p>
+    </dialog>
+    <dialog id="d-personal-lab" class="case suit-personal" aria-labelledby="t-personal-lab">
+      <form method="dialog"><button class="close" aria-label="閉じる">×</button></form>
+      <p class="eyebrow">✦ 個人制作</p>
+      <h2 id="t-personal-lab">個人ラボ</h2>
+      <p>コンセプトアート、AI支援によるゲームプロトタイプ制作、ローカルモデル、マルチエージェントオーケストレーションを実験しながら学ぶ場。</p>
+      <div class="shots"><figure><img src="../media/concept/coven-workshop-v1.jpg" alt="魔法工房のコンセプトアート" loading="lazy"><figcaption>AI-assisted concept art</figcaption></figure><figure><img src="../media/concept/table-horror-night-v1.jpg" alt="D&amp;Dのゲームテーブルを囲む夜のホラーシーンのコンセプトアート" loading="lazy"><figcaption>AI-assisted concept art</figcaption></figure></div>
+      <section aria-label="ツール"><ul class="tools"><li aria-label="Godot"><span class="plate" aria-hidden="true">GO</span><small>Godot</small></li><li aria-label="Unity"><span class="plate" aria-hidden="true">UN</span><small>Unity</small></li><li aria-label="Ollama"><span class="plate" aria-hidden="true">OL</span><small>Ollama</small></li><li aria-label="Claude Code"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg><small>Claude Code</small></li></ul></section>
+      <h3>探求していること</h3><ul><li>AI画像生成ツールを用いたコンセプトアート制作</li><li>D&amp;Dのゲームテーブルを舞台にしたホラーゲームのGodotおよびAI支援によるプロトタイプ制作</li><li>UnityにおけるAI支援を活用した小規模プロトタイプ制作</li><li>RTX 3060環境でのOllamaを用いたローカルモデルの実行・検証</li><li>Claude Codeを用いたマルチエージェント合議（Council）のオーケストレーション</li></ul>
+    </dialog>
+<script>
+const mode=document.getElementById('mode'),slot=document.getElementById('slot'),
+ hoverable=matchMedia('(hover: hover)').matches,still=matchMedia('(prefers-reduced-motion: reduce)').matches,
+ listMode=()=>document.body.classList.contains('list'),show=id=>document.getElementById(id).showModal();
+mode.addEventListener('click',()=>{const on=document.body.classList.toggle('list');mode.setAttribute('aria-pressed',on);mode.textContent=on?'カード表示':'一覧表示'});
+function play(c){
+ if(listMode())return show(c.dataset.open);
+ cards.forEach(x=>x.classList.remove('played'));
+ const mini=c.cloneNode(true);mini.removeAttribute('style');mini.className=c.className+' mini';
+ mini.addEventListener('click',()=>show(mini.dataset.open));
+ mini.querySelector('.drop').addEventListener('click',ev=>{ev.stopPropagation();slot.innerHTML=slotBlank;slot.classList.remove('filled');cards.forEach(x=>x.classList.remove('played'))});
+ mini.addEventListener('keydown',ev=>{if(ev.target.closest('.drop'))return;if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();show(mini.dataset.open)}});
+ const land=()=>{slot.replaceChildren(mini);slot.classList.add('filled');c.classList.add('played');show(c.dataset.open)};
+ if(still)return land();
+ const a=c.getBoundingClientRect(),b=slot.getBoundingClientRect(),w=c.offsetWidth,h=c.offsetHeight,
+  fly=c.cloneNode(true);fly.removeAttribute('tabindex');
+ fly.style.cssText=`position:fixed;left:${a.left+a.width/2-w/2}px;top:${a.top+a.height/2-h/2}px;width:${w}px;height:${h}px;margin:0;z-index:50;pointer-events:none`;
+ document.body.append(fly);c.classList.add('played');
+ const dx=b.left+b.width/2-(a.left+a.width/2),dy=b.top+b.height/2-(a.top+a.height/2);
+ fly.animate([{transform:'none'},{transform:`translate(${dx}px,${dy}px) scale(${b.width/w})`}],{duration:420,easing:'cubic-bezier(.2,.8,.2,1)'})
+  .finished.then(()=>{fly.remove();land()});
+}
+const cards=[...document.querySelectorAll('.table .card')];
+// поднятая карта показывает больше, соседи разъезжаются в стороны
+function lift(c){const k=cards.indexOf(c);cards.forEach((x,i)=>{x.classList.toggle('lifted',x===c);x.style.setProperty('--push',k<0?0:Math.sign(i-k))})}
+let haptic;
+function buzz(){try{
+ if(navigator.vibrate)return navigator.vibrate(8);
+ if(!haptic){haptic=document.createElement('label');haptic.setAttribute('aria-hidden','true');
+  haptic.style.cssText='position:fixed;opacity:0;pointer-events:none;left:-99px';
+  haptic.innerHTML='<input type="checkbox" switch tabindex="-1">';
+  haptic.addEventListener('click',ev=>ev.stopPropagation());document.body.append(haptic)}
+ haptic.click();
+}catch(_){}}
+if(!hoverable){
+ slot.querySelector('small').textContent='スライドしてカードを選び、もう一度タップして開きます';
+ const table=document.querySelector('.table');let drag;
+ const nearest=x=>cards[drag.centres.reduce((best,c,i,a)=>Math.abs(c-x)<Math.abs(a[best]-x)?i:best,0)];
+ table.addEventListener('touchstart',ev=>{
+  drag=null;if(listMode()||ev.touches.length!==1||ev.target.closest('.drop')||!ev.target.closest('.card'))return;
+  const t=ev.touches[0],before=cards.find(c=>c.classList.contains('lifted'));
+  const r=before&&before.getBoundingClientRect(),inside=r&&t.clientX>=r.left&&t.clientX<=r.right&&t.clientY>=r.top&&t.clientY<=r.bottom;
+  // Снимаем центры исходного веера, без разъехавшихся соседей.
+  table.classList.add('measuring');lift(null);
+  const centres=cards.map(c=>{const r=c.getBoundingClientRect();return r.left+r.width/2});
+  lift(before);table.getBoundingClientRect();table.classList.remove('measuring');
+  drag={id:t.identifier,x:t.clientX,y:t.clientY,dx:0,dy:0,axis:null,before,centres};
+  drag.card=inside?before:nearest(t.clientX);lift(drag.card);
+ },{passive:true});
+ table.addEventListener('touchmove',ev=>{
+  if(!drag||listMode())return;
+  const t=[...ev.touches].find(t=>t.identifier===drag.id);if(!t)return;
+  drag.dx=t.clientX-drag.x;drag.dy=t.clientY-drag.y;
+  if(!drag.axis&&Math.max(Math.abs(drag.dx),Math.abs(drag.dy))>8)
+   drag.axis=Math.abs(drag.dx)>Math.abs(drag.dy)?'x':'y';
+  if(drag.axis!=='x')return;
+  ev.preventDefault();const c=nearest(t.clientX);
+  if(c!==drag.card){drag.card=c;lift(c);buzz()}
+ },{passive:false});
+ table.addEventListener('touchend',ev=>{
+  if(!drag||![...ev.changedTouches].some(t=>t.identifier===drag.id))return;
+  const d=drag;drag=null;if(listMode()||d.axis==='y')return;
+  ev.preventDefault();
+  if(d.card!==d.before)buzz();
+  if(Math.hypot(d.dx,d.dy)<10&&d.card===d.before){lift(null);play(d.card)}
+ },{passive:false});
+ table.addEventListener('touchcancel',()=>{drag=null});
+}
+const slotBlank=slot.innerHTML,all=document.getElementById('all');
+document.addEventListener('click',ev=>{if(!ev.target.closest('.card'))lift(null)});
+all.addEventListener('click',()=>{document.querySelectorAll('.suit-f').forEach(b=>b.setAttribute('aria-pressed',false));cards.forEach(c=>c.classList.remove('dim'));document.body.classList.remove('filtering');all.hidden=true});
+document.querySelectorAll('.suit-f').forEach(b=>b.addEventListener('click',()=>{
+ const on=b.getAttribute('aria-pressed')!=='true';
+ document.querySelectorAll('.suit-f').forEach(x=>x.setAttribute('aria-pressed',x===b&&on));
+ document.body.classList.toggle('filtering',on);
+ all.hidden=!on;
+ cards.forEach(c=>c.classList.toggle('dim',on&&!c.classList.contains('suit-'+b.dataset.suit)))}));
+cards.forEach(c=>{
+ c.querySelector('.drop').addEventListener('click',ev=>{ev.stopPropagation();lift(null)});
+ c.addEventListener('click',()=>{
+  // касание без наведения: первый тап поднимает карту, второй разыгрывает
+  if(!hoverable&&!listMode()&&!c.classList.contains('lifted'))return lift(c);
+  lift(null);play(c)});
+ c.addEventListener('keydown',ev=>{if(ev.target.closest('.drop'))return;if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();play(c)}});
+});
+document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click',ev=>{if(ev.target===d)d.close()}));
+// на картах скрины сменяют друг друга раз в 3 с; reduced-motion — только первый
+if(!still)setInterval(()=>document.querySelectorAll('.frame').forEach(f=>{
+ const s=[...f.querySelectorAll('img')];if(s.length<2)return;
+ const i=s.findIndex(x=>x.classList.contains('on'));
+ s[i<0?0:i].classList.remove('on');s[(i+1)%s.length].classList.add('on')}),3000);
+</script>
+</body>
+</html>
